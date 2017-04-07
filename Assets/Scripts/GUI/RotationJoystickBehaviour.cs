@@ -4,11 +4,11 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class RotationJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler {
+public class RotationJoystickBehaviour : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler {
 
 	private const int FULL_ANGLE = 360;
 
-	public static RotationJoystick instance;
+	public static RotationJoystickBehaviour instance;
 
 	public Image container;
 	public Image background;
