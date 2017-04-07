@@ -3,6 +3,7 @@
 /[Oo]bj/
 /[Bb]uild/
 /[Bb]uilds/
+/unity_ios/
 /Assets/AssetStoreTools*
 /Assets/Models
 /Assets/Shaders
