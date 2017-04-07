@@ -6,6 +6,10 @@ using UnityEngine;
 public class ControllerBehaviour : MonoBehaviour {
 
 	private int speed = 10;
+
+	public ParticleSystem boostExplosion;
+	private bool boosted = false;
+
 	private Rigidbody rb;
 
 	void Start () {
@@ -21,7 +25,20 @@ public class ControllerBehaviour : MonoBehaviour {
 	void FixedUpdate () {
 
 		if (BoostButtonBehaviour.instance.IsPressed ()) {
-			rb.AddForce (transform.forward * speed, ForceMode.Acceleration);
+
+			if (!boosted) {
+
+				boostExplosion.Play ();
+				boosted = true;
+
+				rb.AddForce (transform.forward * speed * 10f, ForceMode.Acceleration);
+			} else {
+
+				rb.AddForce (transform.forward * speed, ForceMode.Acceleration);
+			}
+		} else {
+
+			boosted = false;
 		}
 	}
 }
