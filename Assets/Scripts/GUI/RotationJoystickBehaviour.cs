@@ -15,7 +15,8 @@ public class RotationJoystickBehaviour : MonoBehaviour, IPointerDownHandler, IDr
 	public Image joystick;
 
 	private Vector2 containerSize;
-	private float angle;
+	private bool isDragging = false;
+	private float angle = 0f;
 
 	void Awake() {
 	
@@ -31,7 +32,7 @@ public class RotationJoystickBehaviour : MonoBehaviour, IPointerDownHandler, IDr
 
 	public virtual void OnPointerDown(PointerEventData eventData) {
 
-
+		isDragging = true;
 		StopAllCoroutines ();
 		StartCoroutine (FadeTo (15f/255f, 1f, container));
 		StartCoroutine (FadeTo (15f/255f, 1f, background));
@@ -64,6 +65,7 @@ public class RotationJoystickBehaviour : MonoBehaviour, IPointerDownHandler, IDr
 
 	public virtual void OnPointerUp(PointerEventData eventData) {
 
+		isDragging = false;
 		StopAllCoroutines ();
 		StartCoroutine (FadeTo (40f/255f, 1f, container));
 		StartCoroutine (FadeTo (93f/255f, 1f, background));
@@ -102,8 +104,13 @@ public class RotationJoystickBehaviour : MonoBehaviour, IPointerDownHandler, IDr
 		containerSize = new Vector2(rect.x + rect.width * 0.5f, rect.y - rect.height * 0.5f);
 	}
 
+	public bool IsDragging () {
+
+		return isDragging;
+	}
 
 	public float GetAngle ()  {
+		
 		return angle;
 	}
 
