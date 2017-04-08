@@ -5,7 +5,7 @@ using UnityEngine;
 public class BulletPoolBehaviour : MonoBehaviour {
 
 	private float lifetime = .7f;
-	private int poolSize = 4;
+	private int poolSize = 3;
 
 	public GameObject prefab;
 	private Stack<BulletBehaviour> bulletPool = new Stack<BulletBehaviour> ();
