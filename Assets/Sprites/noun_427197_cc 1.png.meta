@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 4474590756f824006a7ba5e724853d0e
-timeCreated: 1491521417
+guid: 434acbcdf790245a0b6cd2ed92ecd5eb
+timeCreated: 1491715422
 licenseType: Pro
 TextureImporter:
   fileIDToRecycleName:
-    21300000: noun_702786_cc_0
+    21300000: noun_427197_cc 1_0
   serializedVersion: 4
   mipmaps:
     mipMapMode: 0
@@ -87,13 +87,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: noun_702786_cc_0
+      name: noun_427197_cc 1_0
       rect:
         serializedVersion: 2
-        x: 121
-        y: 171
-        width: 458
-        height: 458
+        x: 114
+        y: 258
+        width: 471
+        height: 272
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
