@@ -7,8 +7,8 @@ public class StartButtonsBehaviour : MonoBehaviour {
 
 	public bool isAnyPlayerFound;
 
-	public Text tapToPlayText;
-	public Text tapToJoinText;
+	public Button tapToPlayText;
+	public Button tapToJoinText;
 
 
 	void Start () {
@@ -30,13 +30,13 @@ public class StartButtonsBehaviour : MonoBehaviour {
 		StartCoroutine (FadeTo (0f/255f, 0f, tapToJoinText));
 	}
 
-	IEnumerator FadeTo(float aValue, float aTime, Text t) {
+	IEnumerator FadeTo(float aValue, float aTime, Button t) {
 
-		float alpha = t.color.a;
+		float alpha = t.image.color.a;
 		for (float i = 0.0f; i < 1.0f; i += Time.deltaTime / aTime) {
 
-			Color newColor = new Color(t.color.r, t.color.g, t.color.b, Mathf.Lerp(alpha,aValue,i));
-			t.color = newColor;
+			Color newColor = new Color(t.image.color.r, t.image.color.g, t.image.color.b, Mathf.Lerp(alpha,aValue,i));
+			t.image.color = newColor;
 			yield return null;
 		}
 	}

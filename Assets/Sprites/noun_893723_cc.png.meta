@@ -1,9 +1,10 @@
 fileFormatVersion: 2
-guid: 3d1c8895c91724a0a944b8f20b128b6a
-timeCreated: 1491610412
+guid: ee7ad3bc51bd6485da0aec5243ec86bf
+timeCreated: 1491932561
 licenseType: Pro
 TextureImporter:
-  fileIDToRecycleName: {}
+  fileIDToRecycleName:
+    21300000: noun_893723_cc_0
   serializedVersion: 4
   mipmaps:
     mipMapMode: 0
@@ -28,13 +29,13 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     filterMode: -1
-    aniso: 1
+    aniso: 16
     mipBias: -1
     wrapMode: -1
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -44,7 +45,7 @@ TextureImporter:
   alphaUsage: 1
   alphaIsTransparency: 0
   spriteTessellationDetail: -1
-  textureType: 0
+  textureType: 8
   textureShape: 1
   maxTextureSizeSet: 0
   compressionQualitySet: 0
@@ -84,7 +85,20 @@ TextureImporter:
     overridden: 0
   spriteSheet:
     serializedVersion: 2
-    sprites: []
+    sprites:
+    - serializedVersion: 2
+      name: noun_893723_cc_0
+      rect:
+        serializedVersion: 2
+        x: 53
+        y: 89
+        width: 593
+        height: 611
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: 0
     outline: []
   spritePackingTag: 
   userData: 
