@@ -188,6 +188,10 @@ public class PlayerBehaviour : MonoBehaviour {
 		file.Close();
 	}
 
+	public string GetShip () {
+
+		return "InitialShip";
+	}
 
 /*
 	void UserNameCallBack (IResult result) {

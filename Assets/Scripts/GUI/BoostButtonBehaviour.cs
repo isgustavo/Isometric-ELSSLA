@@ -6,7 +6,6 @@ using UnityEngine.UI;
 
 public class BoostButtonBehaviour : MonoBehaviour, IPointerDownHandler, IPointerUpHandler {
 
-
 	public static BoostButtonBehaviour instance;
 
 	public Image button;

@@ -1,9 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 
 [RequireComponent(typeof(Rigidbody))]
-public class ControllerBehaviour : MonoBehaviour {
+public class ControllerBehaviour : NetworkBehaviour {
 
 	private int speed = 10;
 	private float timeTilNextShot = .0f;
@@ -25,6 +26,9 @@ public class ControllerBehaviour : MonoBehaviour {
 
 	void Update () {
 
+		if (!isLocalPlayer)
+			return;
+		
 		if (RotationJoystickBehaviour.instance.IsDragging ()) {
 			gameObject.transform.rotation = Quaternion.AngleAxis (RotationJoystickBehaviour.instance.GetAngle (), Vector3.up);
 
@@ -44,6 +48,9 @@ public class ControllerBehaviour : MonoBehaviour {
 	}
 		
 	void FixedUpdate () {
+
+		if (!isLocalPlayer)
+			return;
 
 		if (BoostButtonBehaviour.instance.IsPressed ()) {
 

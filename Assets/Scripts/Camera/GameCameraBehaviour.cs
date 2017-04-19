@@ -7,23 +7,27 @@ public class GameCameraBehaviour : MonoBehaviour {
 	private Vector3 offset;
 	private Transform target;
 
-	void Start () {
+	void Update () {
 
-		GameObject player = GameObject.FindGameObjectWithTag ("Player");
-		if (player != null) {
+		if (target == null) {
+			GameObject player = GameObject.FindGameObjectWithTag ("Player");
+			if (player != null) {
 
-			target = player.transform;
-			offset = transform.position - target.position;
+				target = player.transform;
+				offset = transform.position - target.position;
+			} else {
 
-		} else {
+				Debug.LogError("Cant found player object");
+				//gameObject.SetActive (false);
+			}
+		} 
 
-			Debug.LogError("Cant found player object");
-			gameObject.SetActive (false);
-		}
 	}
 
 	void LateUpdate () {
 
-		transform.position = target.position + offset;
+		if (target != null) {
+			transform.position = target.position + offset;
+		}
 	}
 }

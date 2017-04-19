@@ -3,42 +3,60 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class StartButtonsBehaviour : MonoBehaviour {
+public abstract class ObserverBehaviour : MonoBehaviour {
+	public abstract void OnNotify ();
+}
 
-	public bool isAnyPlayerFound;
+public class StartButtonsBehaviour : ObserverBehaviour {
 
-	public Button tapToPlayText;
-	public Button tapToJoinText;
+	public Button tapToPlayButton;
+	public Button tapToJoinButton;
+
+	public Text tapToPlayText;
+	public Text tapToJoinText;
 
 
 	void Start () {
-		ShowTapToJoinText ();
+		ShowTapToPlayText ();
 	}
 		
 		
 	public void ShowTapToJoinText () {
 
-		//StopAllCoroutines ();
-		//tapToPlayText.CrossFadeAlpha (0f, .1f, true);
-		StartCoroutine (FadeTo (1f, 2f, tapToJoinText));
+		StopAllCoroutines ();
+		StartCoroutine (FadeTo (0f, 0f, tapToPlayText));
+		tapToPlayButton.gameObject.SetActive (false);
+
+		tapToJoinButton.gameObject.SetActive(true);
+		StartCoroutine (FadeTo (1f, 1.5f, tapToJoinText));
 	}
 
 	public void ShowTapToPlayText () {
 
 		StopAllCoroutines ();
-		StartCoroutine (FadeTo (255f/255f, 1f, tapToPlayText));
-		StartCoroutine (FadeTo (0f/255f, 0f, tapToJoinText));
+		tapToPlayButton.gameObject.SetActive (true);
+		StartCoroutine (FadeTo (1f, 1.5f, tapToPlayText));
+
+		StartCoroutine (FadeTo (0f, 0f, tapToJoinText));
+		tapToJoinButton.gameObject.SetActive(false);
+
+
 	}
 
-	IEnumerator FadeTo(float aValue, float aTime, Button t) {
-
-		float alpha = t.image.color.a;
+	IEnumerator FadeTo(float aValue, float aTime, Text t) {
+		
+		float alpha = t.color.a;
 		for (float i = 0.0f; i < 1.0f; i += Time.deltaTime / aTime) {
 
-			Color newColor = new Color(t.image.color.r, t.image.color.g, t.image.color.b, Mathf.Lerp(alpha,aValue,i));
-			t.image.color = newColor;
+			Color newColor = new Color(t.color.r, t.color.g, t.color.b, Mathf.Lerp(alpha,aValue,i));
+			t.color = newColor;
 			yield return null;
 		}
+	}
+
+	public override void OnNotify () {
+
+		ShowTapToJoinText ();
 	}
 
 }
