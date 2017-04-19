@@ -14,38 +14,62 @@ public class ControllerBehaviour : NetworkBehaviour {
 	private bool boosted = false;
 
 	private Rigidbody rb;
-	private BulletPoolBehaviour bulletPool;
+	BulletSpawnManagerBehaviour spawnManager;
 
 	public Transform bulletPoint;
 
 	void Start () {
 
 		rb = GetComponent<Rigidbody> ();
-		bulletPool = GetComponentInChildren<BulletPoolBehaviour> ();
+		rb.position = transform.position;
+
+		if (isServer) {
+			spawnManager = GameObject.Find ("BulletSpawnManager").GetComponent<BulletSpawnManagerBehaviour> ();
+		}
 	}
 
 	void Update () {
 
 		if (!isLocalPlayer)
 			return;
-		
+
 		if (RotationJoystickBehaviour.instance.IsDragging ()) {
 			gameObject.transform.rotation = Quaternion.AngleAxis (RotationJoystickBehaviour.instance.GetAngle (), Vector3.up);
 
 			if (timeTilNextShot < 0) {
 				timeTilNextShot = timeBetweenShot;
 
-				BulletBehaviour bullet = bulletPool.Pop ();
-				if (bullet != null) {
-					bullet.Shot (bulletPoint.position, bulletPoint.rotation);
-				}
-				//CmdShoot (bulletSpawn.position, bulletSpawn.rotation, gameObject.transform.name);
+				CmdFire(bulletPoint.position, bulletPoint.rotation);
 			}
 		}
 
 		timeTilNextShot -= Time.deltaTime;
 
 	}
+
+	[Command]
+	void CmdFire(Vector3 position, Quaternion rotation) {
+		
+		GameObject obj = spawnManager.GetFromPool();  
+		BulletBehaviour bullet; 
+		if (obj != null) {
+			bullet = obj.GetComponent<BulletBehaviour> ();
+			bullet.Fire (position, rotation);
+
+			NetworkServer.Spawn(obj, spawnManager.assetId);
+			StartCoroutine (Destroy (bullet));
+		}
+
+	}
+
+	public IEnumerator Destroy(BulletBehaviour bullet) {
+		yield return new WaitForSeconds(bullet.m_Lifetime);
+		bullet.RpcRemove ();
+		yield return new WaitForSeconds (bullet.m_ExplosionLifetime);
+		spawnManager.UnSpawnObject(bullet.gameObject);
+		NetworkServer.UnSpawn(bullet.gameObject);
+	}
+
 		
 	void FixedUpdate () {
 
@@ -70,4 +94,12 @@ public class ControllerBehaviour : NetworkBehaviour {
 			boosted = false;
 		}
 	}
+
+	//MARK:: Network Behaviour methods
+	public override void OnStartLocalPlayer () {
+		base.OnStartLocalPlayer ();
+
+		transform.name = netId.ToString ();
+	}
+
 }

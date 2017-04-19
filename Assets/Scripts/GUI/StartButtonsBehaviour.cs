@@ -9,6 +9,8 @@ public abstract class ObserverBehaviour : MonoBehaviour {
 
 public class StartButtonsBehaviour : ObserverBehaviour {
 
+	bool t = true;
+
 	public Button tapToPlayButton;
 	public Button tapToJoinButton;
 
@@ -17,9 +19,11 @@ public class StartButtonsBehaviour : ObserverBehaviour {
 
 
 	void Start () {
-		ShowTapToPlayText ();
+		//ShowTapToPlayText ();
+
+		tapToPlayButton.gameObject.SetActive (true);
+		tapToJoinButton.gameObject.SetActive (false);
 	}
-		
 		
 	public void ShowTapToJoinText () {
 
@@ -56,7 +60,10 @@ public class StartButtonsBehaviour : ObserverBehaviour {
 
 	public override void OnNotify () {
 
-		ShowTapToJoinText ();
+		//ShowTapToJoinText ();
+
+		tapToPlayButton.gameObject.SetActive (false);
+		tapToJoinButton.gameObject.SetActive (true);
 	}
 
 }
