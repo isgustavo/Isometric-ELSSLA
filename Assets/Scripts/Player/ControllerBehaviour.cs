@@ -49,25 +49,13 @@ public class ControllerBehaviour : NetworkBehaviour {
 
 	[Command]
 	void CmdFire(Vector3 position, Quaternion rotation) {
-		
-		GameObject obj = spawnManager.GetFromPool();  
-		BulletBehaviour bullet; 
-		if (obj != null) {
-			bullet = obj.GetComponent<BulletBehaviour> ();
-			bullet.Fire (position, rotation);
 
-			NetworkServer.Spawn(obj, spawnManager.assetId);
-			StartCoroutine (Destroy (bullet));
-		}
+		GameObject obj = spawnManager.GetFromPool(position, rotation); 
+		BulletBehaviour bullet = obj.GetComponent<BulletBehaviour> ();
+		bullet.Fire ();
 
-	}
-
-	public IEnumerator Destroy(BulletBehaviour bullet) {
-		yield return new WaitForSeconds(bullet.m_Lifetime);
-		bullet.RpcRemove ();
-		yield return new WaitForSeconds (bullet.m_ExplosionLifetime);
-		spawnManager.UnSpawnObject(bullet.gameObject);
-		NetworkServer.UnSpawn(bullet.gameObject);
+		NetworkServer.Spawn(obj, spawnManager.assetId);
+		StartCoroutine (bullet.Remove ());
 	}
 
 		

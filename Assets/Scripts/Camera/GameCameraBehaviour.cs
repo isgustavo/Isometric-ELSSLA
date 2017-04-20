@@ -16,11 +16,11 @@ public class GameCameraBehaviour : MonoBehaviour {
 				target = player.transform;
 				offset = transform.position - target.position;
 				offset = new Vector3 (0, offset.y, offset.z);
-			} else {
+			} //else {
 
-				Debug.LogError("Cant found player object");
+				//Debug.LogError("Cant found player object");
 				//gameObject.SetActive (false);
-			}
+			//}
 		} 
 
 	}

@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class AsteroidBehaviour : NetworkBehaviour {
-
-	public event SpawnFragmentDelegate m_Delegate;
+public class FragmentBehaviour : NetworkBehaviour {
 
 	public GameObject m_Mesh;
 	public ParticleSystem explosion_PS;
@@ -29,7 +27,6 @@ public class AsteroidBehaviour : NetworkBehaviour {
 	IEnumerator Destroy () {
 
 		RpcRemove ();
-		m_Delegate (this.gameObject);
 		yield return new WaitForSeconds (3f);
 		RpcUnSpawn ();
 
@@ -49,5 +46,13 @@ public class AsteroidBehaviour : NetworkBehaviour {
 		this.gameObject.SetActive (false);
 		NetworkServer.UnSpawn (this.gameObject);
 	}
-		
+
+
+
+
+
+
+
+
+
 }
