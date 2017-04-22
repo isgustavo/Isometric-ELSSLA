@@ -6,15 +6,21 @@ using UnityEngine.Networking;
 [RequireComponent(typeof(Rigidbody))]
 public class ControllerBehaviour : NetworkBehaviour {
 
+	private const int INITIAL_SCORE = 0;
+
 	private int speed = 10;
 	private float timeTilNextShot = .0f;
 	private float timeBetweenShot = .3f;
+
+	[SyncVar (hook="OnScoreChange")]
+	public int score = INITIAL_SCORE;
 
 	public ParticleSystem boostExplosion;
 	private bool boosted = false;
 
 	private Rigidbody rb;
 	BulletSpawnManagerBehaviour spawnManager;
+	ScoreManagerBehaviour scoreManager;
 
 	public Transform bulletPoint;
 
@@ -26,6 +32,7 @@ public class ControllerBehaviour : NetworkBehaviour {
 		if (isServer) {
 			spawnManager = GameObject.Find ("BulletSpawnManager").GetComponent<BulletSpawnManagerBehaviour> ();
 		}
+			
 	}
 
 	void Update () {
@@ -39,7 +46,7 @@ public class ControllerBehaviour : NetworkBehaviour {
 			if (timeTilNextShot < 0) {
 				timeTilNextShot = timeBetweenShot;
 
-				CmdFire(bulletPoint.position, bulletPoint.rotation);
+				CmdFire(bulletPoint.position, bulletPoint.rotation, gameObject.transform.name);
 			}
 		}
 
@@ -48,11 +55,11 @@ public class ControllerBehaviour : NetworkBehaviour {
 	}
 
 	[Command]
-	void CmdFire(Vector3 position, Quaternion rotation) {
+	void CmdFire(Vector3 position, Quaternion rotation, string id) {
 
 		GameObject obj = spawnManager.GetFromPool(position, rotation); 
 		BulletBehaviour bullet = obj.GetComponent<BulletBehaviour> ();
-		bullet.Fire ();
+		bullet.Fire (id);
 
 		NetworkServer.Spawn(obj, spawnManager.assetId);
 		StartCoroutine (bullet.Remove ());
@@ -83,11 +90,35 @@ public class ControllerBehaviour : NetworkBehaviour {
 		}
 	}
 
-	//MARK:: Network Behaviour methods
 	public override void OnStartLocalPlayer () {
-		base.OnStartLocalPlayer ();
+		base.OnStartServer ();
 
-		transform.name = netId.ToString ();
+		scoreManager = GameObject.FindGameObjectWithTag ("ScoreManager").GetComponent<ScoreManagerBehaviour> ();
+
 	}
 
+	public override void OnStartClient () {
+		base.OnStartClient ();
+
+		gameObject.transform.name = "PLAYER" + gameObject.GetComponent<NetworkIdentity> ().netId.ToString ();
+
+		if (!isServer)
+			return;
+
+		PlayersManager.instance.AddPlayer (gameObject.transform.name, this);
+	}
+
+	public void OnScoreChange (int value) {
+
+		score = value;
+		if (value > PlayerBehaviour.instance.GetHighScore ()) {
+			//highscore = value;
+		}
+			
+		if (!isLocalPlayer)
+			return;
+
+		scoreManager.m_Score = score;
+
+	}
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class AsteroidBehaviour : NetworkBehaviour {
+public class AsteroidBehaviour : NetworkBehaviour, Destructible {
 
 	public event SpawnFragmentDelegate m_Delegate;
 
@@ -48,6 +48,11 @@ public class AsteroidBehaviour : NetworkBehaviour {
 		m_Mesh.SetActive(true);
 		this.gameObject.SetActive (false);
 		NetworkServer.UnSpawn (this.gameObject);
+	}
+
+	public int GetPoints() {
+
+		return 10;
 	}
 		
 }

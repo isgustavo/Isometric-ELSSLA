@@ -102,7 +102,10 @@ public class PlayerBehaviour : MonoBehaviour {
 		if (FB.IsLoggedIn) {
 
 			LoadFbStats ();
-		} 
+		} else {
+
+			fbName = GetGuestName ();
+		}
 	}
 
 	void OnHideUnity(bool isGameShown) {
@@ -191,6 +194,40 @@ public class PlayerBehaviour : MonoBehaviour {
 	public string GetShip () {
 
 		return "InitialShip";
+	}
+
+	private string GetGuestName () {
+
+		List<string> firstNameSyllables = new List<string>();
+		firstNameSyllables.Add("mon");
+		firstNameSyllables.Add("fay");
+		firstNameSyllables.Add("shi");
+		firstNameSyllables.Add("zag");
+		firstNameSyllables.Add("blarg");
+		firstNameSyllables.Add("rash");
+		firstNameSyllables.Add("izen");
+
+		string firstName = "";
+		int numberOfSyllablesInFirstName = UnityEngine.Random.Range (2, 4);
+		for (int i = 0; i < numberOfSyllablesInFirstName; i++) {
+			firstName += firstNameSyllables[UnityEngine.Random.Range(0, firstNameSyllables.Count)];
+		}
+		string firstNameLetter = "";
+		firstNameLetter = firstName.Substring(0,1);
+		firstName = firstName.Remove(0,1);
+		firstNameLetter = firstNameLetter.ToUpper();
+		firstName = firstNameLetter + firstName;
+		return "GUEST::"+firstName;
+	}
+
+	public string GetName () {
+
+		return fbName;
+	}
+
+	public int GetHighScore () {
+
+		return 9999999;
 	}
 
 /*

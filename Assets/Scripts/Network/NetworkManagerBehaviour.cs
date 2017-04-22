@@ -47,13 +47,13 @@ public class NetworkManagerBehaviour : NetworkManager {
 				GameObject playerShip;
 				if (client) {
 					client = false;
-					playerShip = (GameObject)GameObject.Instantiate (prefab, new Vector3(-2, 6, -6), Quaternion.identity);
+					playerShip = (GameObject)GameObject.Instantiate (prefab, new Vector3 (-2, 6, -6), Quaternion.identity);
+
 				} else {
-					playerShip = (GameObject)GameObject.Instantiate (prefab, new Vector3(2, 6,-6), Quaternion.identity);
+					playerShip = (GameObject)GameObject.Instantiate (prefab, new Vector3 (2, 6, -6), Quaternion.identity);
 				}
 
-
-				//GameObject playerShip = (GameObject)GameObject.Instantiate (prefab);
+				//playerShip.name = PlayerBehaviour.instance.GetName ();
 				NetworkServer.AddPlayerForConnection (conn, playerShip, playerControllerId);
 				break;
 

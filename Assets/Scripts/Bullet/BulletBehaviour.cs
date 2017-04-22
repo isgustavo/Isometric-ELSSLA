@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
+public interface Destructible {
+
+	int GetPoints ();
+}
 
 public class BulletBehaviour : NetworkBehaviour {
 
@@ -17,6 +21,8 @@ public class BulletBehaviour : NetworkBehaviour {
 
 	//private bool isSpread = false;
 	//private Quaternion rotTarget;
+
+	public string id { get; set;}
 
 	public GameObject m_Mesh;
 	public ParticleSystem rocket_PS;
@@ -39,8 +45,8 @@ public class BulletBehaviour : NetworkBehaviour {
 
 
 
-	public void Fire () {
-		
+	public void Fire (string id) {
+		this.id = id;
 		m_Mesh.SetActive (true);
 
 		Rigidbody rb = GetComponentInChildren <Rigidbody> ();
@@ -80,6 +86,16 @@ public class BulletBehaviour : NetworkBehaviour {
 
 		StopAllCoroutines ();
 		StartCoroutine (Destroy ());
+
+		if(!isServer) 
+			return;
+
+		GameObject hit = collision.gameObject;
+		Destructible obj = hit.GetComponent<Destructible> ();
+		if (obj != null) {
+			ControllerBehaviour player = PlayersManager.instance.GetPlayer (id);
+			player.score += obj.GetPoints ();
+		}
 
 	}
 

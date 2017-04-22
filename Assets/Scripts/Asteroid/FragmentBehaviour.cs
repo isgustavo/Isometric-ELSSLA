@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class FragmentBehaviour : NetworkBehaviour {
+public class FragmentBehaviour : NetworkBehaviour, Destructible {
 
 	public GameObject m_Mesh;
 	public ParticleSystem explosion_PS;
@@ -47,12 +47,9 @@ public class FragmentBehaviour : NetworkBehaviour {
 		NetworkServer.UnSpawn (this.gameObject);
 	}
 
+	public int GetPoints() {
 
-
-
-
-
-
-
-
+		return 5;
+	}
+		
 }
