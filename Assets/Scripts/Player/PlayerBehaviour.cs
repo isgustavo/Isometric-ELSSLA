@@ -6,38 +6,8 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using UnityEngine.UI;
 using Facebook.Unity;
+using System.Linq;
 
-public class Player {
-
-	private string id;
-	private string name;
-	private Sprite picture;
-	private int highScore;
-	private int kill;
-	private int death;
-
-	public Player (string id, string name, int highScore, KD kd) {
-		this.id = id;
-		this.name = name;
-		this.highScore = highScore;
-		this.kill = kd.kill;
-		this.death = kd.death;
-
-		FB.API ("/"+this.id+"/picture?type=square&height=128&width=128", HttpMethod.GET, ProfilePicCallBack);
-
-	}
-
-	void ProfilePicCallBack(IGraphResult result) {
-
-		if (result.Texture != null) {
-
-			this.picture = Sprite.Create (result.Texture, new Rect (0, 0, 128, 128), new Vector2 ());
-		} else {
-			Debug.Log (result.Error);
-		}
-	}
-
-}
 
 [Serializable]
 public class KD {
@@ -64,7 +34,10 @@ public class KDData {
 
 	public KD Get (string key) {
 
-		return kds [key];
+		if (kds.ContainsKey (key)) {
+			return kds [key];
+		}
+		return new KD (0,0);
 	}
 }
 
@@ -162,9 +135,16 @@ public class PlayerBehaviour : MonoBehaviour {
 			string name = user ["name"].ToString ();
 			string highScore = entry ["score"].ToString ();
 
+			Debug.Log ("id"+id + " name" + name + "highScore" + highScore);
 			Player player = new Player (id, name, Int32.Parse(highScore), this.data.Get(id));
-		    players.Add (id, player);
+		    players[id] = player;
 		}
+
+		GameObject scoreBoardManager = GameObject.FindGameObjectWithTag ("DeadManager");
+		if (scoreBoardManager != null) {
+			scoreBoardManager.GetComponent<DeadManagerBehaviour> ().UpdateScoreBoardList ();
+		}
+
 	}
 
 	KDData LoadData () {
@@ -174,10 +154,12 @@ public class PlayerBehaviour : MonoBehaviour {
 			Debug.Log("File Not Found! Load Failed.");
 			return null;
 		}
+
 		BinaryFormatter bf = new BinaryFormatter(); 
 		FileStream file = File.Open(Application.persistentDataPath + "/SaveData" + ".dat", FileMode.Open); 
 		KDData data = (KDData) bf.Deserialize(file); 
 		file.Close(); 
+
 		return data;
 	}
 
@@ -228,6 +210,12 @@ public class PlayerBehaviour : MonoBehaviour {
 	public int GetHighScore () {
 
 		return 9999999;
+	}
+
+
+	public List<Player> GetPlayers() {
+
+		return players.Values.ToList<Player> ();
 	}
 
 /*

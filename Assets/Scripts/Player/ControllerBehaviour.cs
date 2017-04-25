@@ -14,20 +14,44 @@ public class ControllerBehaviour : NetworkBehaviour {
 
 	[SyncVar (hook="OnScoreChange")]
 	public int score = INITIAL_SCORE;
+	private bool isDead;
+	public bool Dead {
+		get { return isDead; }
+		set { 
+			isDead = value;
+			if (isDead) {
+				scoreManager.gameObject.SetActive (false);
+				deadManager.SetActive (true);
+			} else {
+				scoreManager.gameObject.SetActive (true);
+				deadManager.SetActive (false);
+			}
+		}
+	}
 
-	public ParticleSystem boostExplosion;
+	public ParticleSystem rocket_PS;
+
+	public ParticleSystem boost_PS;
 	private bool boosted = false;
+
+	public ParticleSystem exlosion_PS;
 
 	private Rigidbody rb;
 	BulletSpawnManagerBehaviour spawnManager;
 	ScoreManagerBehaviour scoreManager;
+	DeadManagerBehaviour deadManager;
 
 	public Transform bulletPoint;
 
 	void Start () {
+		base.OnStartServer ();
 
 		rb = GetComponent<Rigidbody> ();
 		rb.position = transform.position;
+
+		if (isLocalPlayer) {
+			Dead = false;
+		}
 
 		if (isServer) {
 			spawnManager = GameObject.Find ("BulletSpawnManager").GetComponent<BulletSpawnManagerBehaviour> ();
@@ -37,7 +61,7 @@ public class ControllerBehaviour : NetworkBehaviour {
 
 	void Update () {
 
-		if (!isLocalPlayer)
+		if (!isLocalPlayer || isDead)
 			return;
 
 		if (RotationJoystickBehaviour.instance.IsDragging ()) {
@@ -53,29 +77,17 @@ public class ControllerBehaviour : NetworkBehaviour {
 		timeTilNextShot -= Time.deltaTime;
 
 	}
-
-	[Command]
-	void CmdFire(Vector3 position, Quaternion rotation, string id) {
-
-		GameObject obj = spawnManager.GetFromPool(position, rotation); 
-		BulletBehaviour bullet = obj.GetComponent<BulletBehaviour> ();
-		bullet.Fire (id);
-
-		NetworkServer.Spawn(obj, spawnManager.assetId);
-		StartCoroutine (bullet.Remove ());
-	}
-
 		
 	void FixedUpdate () {
 
-		if (!isLocalPlayer)
+		if (!isLocalPlayer || isDead)
 			return;
 
 		if (BoostButtonBehaviour.instance.IsPressed ()) {
 
 			if (!boosted) {
 
-				boostExplosion.Play ();
+				boost_PS.Play ();
 				boosted = true;
 
 				rb.AddForce (transform.forward * speed * 10f, ForceMode.Acceleration);
@@ -92,9 +104,8 @@ public class ControllerBehaviour : NetworkBehaviour {
 
 	public override void OnStartLocalPlayer () {
 		base.OnStartServer ();
-
 		scoreManager = GameObject.FindGameObjectWithTag ("ScoreManager").GetComponent<ScoreManagerBehaviour> ();
-
+		deadManager = GameObject.FindGameObjectWithTag ("DeadManager").GetComponent<DeadManagerBehaviour> ();
 	}
 
 	public override void OnStartClient () {
@@ -108,6 +119,18 @@ public class ControllerBehaviour : NetworkBehaviour {
 		PlayersManager.instance.AddPlayer (gameObject.transform.name, this);
 	}
 
+	[Command]
+	void CmdFire(Vector3 position, Quaternion rotation, string id) {
+
+		GameObject obj = spawnManager.GetFromPool(position, rotation); 
+		BulletBehaviour bullet = obj.GetComponent<BulletBehaviour> ();
+		bullet.Fire (id);
+
+		NetworkServer.Spawn(obj, spawnManager.assetId);
+		StartCoroutine (bullet.Remove ());
+	}
+
+
 	public void OnScoreChange (int value) {
 
 		score = value;
@@ -119,6 +142,15 @@ public class ControllerBehaviour : NetworkBehaviour {
 			return;
 
 		scoreManager.m_Score = score;
+
+	}
+
+	void OnCollisionEnter(Collision collision) { 
+
+		Dead = true;
+
+		rocket_PS.Stop ();
+		//exlosion_PS.Play ();
 
 	}
 }
