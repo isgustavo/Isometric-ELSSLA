@@ -21,10 +21,10 @@ public class ControllerBehaviour : NetworkBehaviour {
 			isDead = value;
 			if (isDead) {
 				scoreManager.gameObject.SetActive (false);
-				deadManager.SetActive (true);
+				deadManager.SetActive (true, PlayerBehaviour.instance.GetHighScore (), score);
 			} else {
 				scoreManager.gameObject.SetActive (true);
-				deadManager.SetActive (false);
+				deadManager.SetActive (false, 0, 0);
 			}
 		}
 	}

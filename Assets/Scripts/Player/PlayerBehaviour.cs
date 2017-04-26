@@ -122,6 +122,9 @@ public class PlayerBehaviour : MonoBehaviour {
 	}
 
 	private void FBCallBack (IResult result) {
+		//result.
+
+		Debug.Log ("Error: "+ result.Error);
 
 		IDictionary<string, object> data = result.ResultDictionary;
 		List<object> listObj = (List<object>)data ["data"];
