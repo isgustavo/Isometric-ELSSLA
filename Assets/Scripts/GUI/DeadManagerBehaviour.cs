@@ -7,7 +7,26 @@ using System.IO;
 using UnityEngine.UI;
 using Facebook.Unity;
 
-public class DeadManagerBehaviour : MonoBehaviour {
+
+
+
+public class DeadManagerBehaviour : Observer {
+
+	private Transform _ScoreBoardTransform;
+
+	[SerializeField]
+	private GameObject _noPlayerCellPrefab;
+	private GameObject _noPlayerCell;
+
+	[SerializeField]
+	private GameObject _facebookConnectCellPrefab;
+	private GameObject _facebookConnectCell;
+
+	[SerializeField]
+	private GameObject _scoreBoardlistContainer;
+	[SerializeField]
+	private GameObject _scoreBoardCellPrefab;
+
 
 	public GameObject m_ScoreBoardContainer;
 	public GameObject m_NoPlayerCellPrefab;
@@ -24,7 +43,7 @@ public class DeadManagerBehaviour : MonoBehaviour {
 		scoreManager = gameObject.GetComponent<ScoreManagerBehaviour> ();
 	}
 
-	public void SetActive (bool value, int highScore, int lastScore) {
+	public void SetActive (bool value, int highScore, int lastScore, string name, KD kd) {
 		
 		gameObject.SetActive (value);
 		scoreManager.m_HighScore = highScore;
@@ -41,29 +60,66 @@ public class DeadManagerBehaviour : MonoBehaviour {
 			} else {
 				if (m_NoPlayerCell == null) {
 					m_NoPlayerCell = Instantiate (m_NoPlayerCellPrefab);
-					m_NoPlayerCell.transform.SetParent (m_ScoreBoardContainer.gameObject.transform);
+					m_NoPlayerCell.transform.SetParent (_ScoreBoardTransform);
 				}
 
 				if (m_FacebookConnectCell == null) {
 					m_FacebookConnectCell = Instantiate (m_FacebookConnectCellPrefab);
-					m_FacebookConnectCell.transform.SetParent (m_ScoreBoardContainer.gameObject.transform);
+					m_FacebookConnectCell.transform.SetParent (_ScoreBoardTransform);
 				}
 			}
 		}
 
 	}
 
+	public void Active () {
+
+		gameObject.SetActive (true);
+
+		if (!FB.IsLoggedIn) {
+
+			if (_noPlayerCell == null) {
+				_noPlayerCell = Instantiate (_noPlayerCellPrefab);
+				_noPlayerCell.transform.SetParent (_ScoreBoardTransform);
+			}
+
+			if (_facebookConnectCell == null) {
+				_facebookConnectCell = Instantiate (_facebookConnectCellPrefab);
+				_facebookConnectCell.transform.SetParent (_ScoreBoardTransform);
+			}
+		}
+	}
+
+	public override void OnNotify() {
+
+		for (int i = 0; i < PlayerBehaviour.instance.players.Count; i++) {
+			GameObject obj;
+			if (_scoreBoardlistContainer.transform.childCount > 0 && _scoreBoardlistContainer.transform.childCount > i) {
+				obj = _scoreBoardlistContainer.transform.GetChild (i).gameObject;
+
+			} else {
+				obj = Instantiate (_scoreBoardCellPrefab);
+				obj.transform.SetParent (_scoreBoardlistContainer.transform);
+			}
+
+			ScoreBoardCell cell = obj.GetComponent<ScoreBoardCell> ();
+			//cell.SetValue (players[i]);
+		}
+	}
+
+
 
 	public void LogIn () {
 
-		PlayerBehaviour.instance.LogIn ();
+		//PlayerBehaviour.instance.LogIn ();
+		//NewHighScore ();
 	}
 
 	public void UpdateScoreBoardList () {
 
 		m_NoPlayerCell.SetActive (false);
 		m_FacebookConnectCell.SetActive (false);
-
+		/*
 		List<Player> players = PlayerBehaviour.instance.GetPlayers ();
 
 		for (int i = 0; i < players.Count; i++) {
@@ -84,7 +140,7 @@ public class DeadManagerBehaviour : MonoBehaviour {
 
 		GameObject inviteCell = Instantiate (m_InviteCell);
 		inviteCell.transform.SetParent (m_ScoreBoardContainer.gameObject.transform);
-
+	*/
 	}
 		
 }

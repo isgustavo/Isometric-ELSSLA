@@ -12,22 +12,11 @@ public class ControllerBehaviour : NetworkBehaviour {
 	private float timeTilNextShot = .0f;
 	private float timeBetweenShot = .3f;
 
+	[SyncVar]
+	public string name;
+
 	[SyncVar (hook="OnScoreChange")]
 	public int score = INITIAL_SCORE;
-	private bool isDead;
-	public bool Dead {
-		get { return isDead; }
-		set { 
-			isDead = value;
-			if (isDead) {
-				scoreManager.gameObject.SetActive (false);
-				deadManager.SetActive (true, PlayerBehaviour.instance.GetHighScore (), score);
-			} else {
-				scoreManager.gameObject.SetActive (true);
-				deadManager.SetActive (false, 0, 0);
-			}
-		}
-	}
 
 	public ParticleSystem rocket_PS;
 
@@ -43,15 +32,14 @@ public class ControllerBehaviour : NetworkBehaviour {
 
 	public Transform bulletPoint;
 
+	private GameSceneBehaviour _gameSceneManager;
+
 	void Start () {
 		base.OnStartServer ();
 
 		rb = GetComponent<Rigidbody> ();
 		rb.position = transform.position;
 
-		if (isLocalPlayer) {
-			Dead = false;
-		}
 
 		if (isServer) {
 			spawnManager = GameObject.Find ("BulletSpawnManager").GetComponent<BulletSpawnManagerBehaviour> ();
@@ -61,7 +49,7 @@ public class ControllerBehaviour : NetworkBehaviour {
 
 	void Update () {
 
-		if (!isLocalPlayer || isDead)
+		if (!isLocalPlayer)
 			return;
 
 		if (RotationJoystickBehaviour.instance.IsDragging ()) {
@@ -80,7 +68,7 @@ public class ControllerBehaviour : NetworkBehaviour {
 		
 	void FixedUpdate () {
 
-		if (!isLocalPlayer || isDead)
+		if (!isLocalPlayer)
 			return;
 
 		if (BoostButtonBehaviour.instance.IsPressed ()) {
@@ -105,7 +93,16 @@ public class ControllerBehaviour : NetworkBehaviour {
 	public override void OnStartLocalPlayer () {
 		base.OnStartServer ();
 		scoreManager = GameObject.FindGameObjectWithTag ("ScoreManager").GetComponent<ScoreManagerBehaviour> ();
-		deadManager = GameObject.FindGameObjectWithTag ("DeadManager").GetComponent<DeadManagerBehaviour> ();
+		//deadManager = GameObject.FindGameObjectWithTag ("DeadManager").GetComponent<DeadManagerBehaviour> ();
+
+		GameObject obj = GameObject.FindGameObjectWithTag ("GameScene");
+		if (obj != null) {
+
+			_gameSceneManager = obj.GetComponent<GameSceneBehaviour> ();
+
+		}
+
+		PlayerBehaviour.instance.observer = _gameSceneManager.deadScene.GetComponent<DeadSceneBehaviour> ();
 	}
 
 	public override void OnStartClient () {
@@ -133,7 +130,7 @@ public class ControllerBehaviour : NetworkBehaviour {
 
 	public void OnScoreChange (int value) {
 
-		score = value;
+		/*score = value;
 		if (value > PlayerBehaviour.instance.GetHighScore ()) {
 			//highscore = value;
 		}
@@ -141,15 +138,28 @@ public class ControllerBehaviour : NetworkBehaviour {
 		if (!isLocalPlayer)
 			return;
 
-		scoreManager.m_Score = score;
+		scoreManager.m_Score = score;*/
 
 	}
 
 	void OnCollisionEnter(Collision collision) { 
 
-		Dead = true;
+		//rocket_PS.Stop ();
+		_gameSceneManager.SetState(GameSceneBehaviour.State.Dead);
+		BulletBehaviour bullet = collision.gameObject.GetComponent<BulletBehaviour> ();
+		if (bullet != null) {
+		/*	PlayerBehaviour.instance.SaveKD (bullet.id);
+			ControllerBehaviour player = PlayersManager.instance.GetPlayer (bullet.id);
 
-		rocket_PS.Stop ();
+			if (player != null) {
+
+
+				deadManager.SetActive (true, PlayerBehaviour.instance.GetHighScore (), score, player.name, PlayerBehaviour.instance.GetKD(bullet.id + ""));
+			}
+*/
+		}
+
+
 		//exlosion_PS.Play ();
 
 	}

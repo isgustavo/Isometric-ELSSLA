@@ -1,14 +1,218 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using System;
-using System.Runtime.Serialization.Formatters.Binary; 
-using System.IO;
-using UnityEngine.UI;
+using UnityEngine;
 using Facebook.Unity;
-using System.Linq;
+using Firebase;
+using Firebase.Database;
+using Firebase.Unity.Editor;
+using UnityEngine.UI;
 
 
+public class PlayerBehaviour : MonoBehaviour {
+
+	public static PlayerBehaviour instance = null;
+
+	private Player _player;
+	private List<Player> _players;
+	public List<Player> players { 
+		get { 
+			return _players; 
+		} 
+	}
+
+	private DatabaseReference _reference; 
+	private Observer _observer;
+	public Observer observer {
+		get { return _observer; }
+		set { _observer = value; }
+	}
+
+	void Awake () {
+
+		if (instance == null) {
+
+			instance = this;
+
+		} else if (instance != this) {
+
+			Destroy (gameObject);
+		}
+			
+		FB.Init (SetInit, OnHideUnity);
+
+	}
+
+	void SetInit() {
+
+		if (FB.IsLoggedIn) {
+
+			//FB.API ("/me?fields=id,first_name", HttpMethod.GET, PlayerInfoCallBack);
+		} else {
+
+			Debug.Log ("FB is not logged in");
+		}
+	}
+
+	void OnHideUnity(bool isGameShown) {
+
+		if (!isGameShown) {
+			Time.timeScale = 0;
+		} else {
+			Time.timeScale = 1;
+		}
+
+	}
+
+
+	public void LogInAction () {
+
+		List<string> permissions = new List<string> ();
+		permissions.Add ("public_profile");
+
+		FB.LogInWithReadPermissions (permissions, AuthCallBack);
+
+	}
+
+	public void NewHighScore (int value) {
+
+		var scoreData = new Dictionary<string, string> ();
+		scoreData ["score"] = value.ToString ();
+
+		FB.API ("/me/scores", HttpMethod.POST, delegate (IGraphResult result) {
+			Debug.Log("Set score: "+ result.RawResult);
+		}, scoreData);
+	}
+
+	void AuthCallBack(IResult result) {
+
+		if (result.Error != null) {
+
+			Debug.Log (result.Error);
+		} else {
+			if (FB.IsLoggedIn) {
+
+				FB.API ("/me?fields=id,first_name", HttpMethod.GET, PlayerInfoCallBack);
+
+			} else {
+				Debug.Log ("FB is not logged in");
+			}
+		}
+	}
+
+	void PlayerInfoCallBack (IResult result) {
+
+		if (result.Error != null) {
+
+			Debug.Log (result.Error);
+		} else {
+			Debug.Log ("PlayerInfoCallBack");
+			string id = result.ResultDictionary["id"].ToString ();
+			string name = result.ResultDictionary ["first_name"].ToString ();
+			_player = new Player (id, name);
+
+			FB.API ("/app/scores?fields=score,user.limit(30)", HttpMethod.GET, ScoreCallBack);
+		} 
+	}
+
+
+	void ScoreCallBack (IResult result) {
+		Debug.Log ("ScoreCallBack");
+		_players = new List<Player> ();
+		IDictionary<string, object> data = result.ResultDictionary;
+		List<object> listObj = (List<object>) data ["data"];
+
+		FirebaseApp.DefaultInstance.SetEditorDatabaseUrl(UtilBehaviour.FIREBASE_REALTIME_DATABASE_PATH);
+		_reference = FirebaseDatabase.DefaultInstance.RootReference;
+
+		_reference.Child (UtilBehaviour.ROOT).Child (_player.id).Child (UtilBehaviour.GROUP).GetValueAsync ().ContinueWith (task => {
+			if (task.IsFaulted) {
+				Debug.Log ("Firebase error:" + task.Exception );
+			} else if (task.IsCompleted) {
+				DataSnapshot snapshot = task.Result;
+
+				foreach (object obj in listObj) {
+
+					var entry = (Dictionary<string, object>) obj;
+					var user = (Dictionary<string, object>) entry ["user"];
+
+					string id = user ["id"].ToString ();
+					string name = user ["name"].ToString ();
+					string highScore = entry ["score"].ToString ();
+					int k = 0, d = 0;
+
+					if (snapshot.Child(id).Value != null) {
+						k = Int32.Parse(snapshot.Child(id).Child("K").Value.ToString ()); 
+						d = Int32.Parse(snapshot.Child(id).Child("D").Value.ToString ()); 
+					} 
+
+					if (_player.id == id) {
+						_player.highScore = Int32.Parse(highScore);
+						_players.Add (_player);
+					} else {
+
+						Player player = new Player (id, name, Int32.Parse(highScore), k , d);
+						_players.Add (player);
+					}
+				}
+				Debug.Log ("OnNotify");
+				_observer.OnNotify();
+			}
+		});
+
+	}
+
+	/*
+	private void SetFriends (List<object> listObj) {
+
+		FirebaseApp.DefaultInstance.SetEditorDatabaseUrl("https://kdfacebookfriends.firebaseio.com/");
+		reference = FirebaseDatabase.DefaultInstance.RootReference;
+
+		reference.Child ("users").Child (player.m_Id).Child ("KD").GetValueAsync ().ContinueWith (task => {
+			if (task.IsFaulted) {
+				Debug.Log ("Firebase error:" + task.Exception );
+			} else if (task.IsCompleted) {
+				DataSnapshot snapshot = task.Result;
+
+				foreach (object obj in listObj) {
+
+					var entry = (Dictionary<string, object>) obj;
+					var user = (Dictionary<string, object>) entry ["user"];
+
+					string id = user ["id"].ToString ();
+					string name = user ["name"].ToString ();
+					string highScore = entry ["score"].ToString ();
+					int k = 0, d = 0;
+
+					if (snapshot.Child(id).Value != null) {
+						k = Int32.Parse(snapshot.Child(id).Child("k").Value.ToString ()); 
+						d = Int32.Parse(snapshot.Child(id).Child("d").Value.ToString ()); 
+					} 
+
+					if (id == player.m_Id) {
+						player.m_Highscore = Int32.Parse(highScore);
+						players.Add (player);
+					} else {
+
+						Player player = new Player (id, true, name, Int32.Parse(highScore), k , d);
+						players.Add (player);
+					}
+				}
+
+				UpdateList ();
+
+			}
+		});
+
+
+	}
+
+*/
+
+}
+
+
+/*
 [Serializable]
 public class KD {
 
@@ -221,7 +425,39 @@ public class PlayerBehaviour : MonoBehaviour {
 		return players.Values.ToList<Player> ();
 	}
 
-/*
+	public KD GetKD (string key) {
+
+		return data.Get (key);
+	}
+
+	public void SaveKill (string id) {
+		
+		KD kd = data.Get (id);
+
+		if (kd != null) {
+			kd.kill += 1;
+		} else {
+
+			kd = new KD ();
+			kd.kill += 1;
+			data.Add (id, kd);
+		}
+	}
+
+	public void SaveDeath (string id) {
+
+		KD kd = data.Get (id);
+
+		if (kd != null) {
+			kd.death += 1;
+		} else {
+
+			kd = new KD ();
+			kd.death += 1;
+			data.Add (id, kd);
+		}
+	}
+
 	void UserNameCallBack (IResult result) {
 
 		if (result.Error == null) {
@@ -233,6 +469,9 @@ public class PlayerBehaviour : MonoBehaviour {
 		}
 
 	}
+
+/*
+
 
 	void ProfilePicCallBack(IGraphResult result) {
 
@@ -257,7 +496,7 @@ public class PlayerBehaviour : MonoBehaviour {
 
 		FB.API ("/app/scores?fields=score,user.limit(30)", HttpMethod.GET, HighScoreCallBack);
 	}
-*/
 
 
-}
+
+}*/

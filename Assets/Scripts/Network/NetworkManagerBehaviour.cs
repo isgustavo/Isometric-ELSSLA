@@ -43,7 +43,7 @@ public class NetworkManagerBehaviour : NetworkManager {
 		
 		foreach (GameObject prefab in spawnPrefabs) {
 			
-			if (PlayerBehaviour.instance.GetShip () == prefab.transform.name) {
+			//if (PlayerBehaviour.instance.GetShip () == prefab.transform.name) {
 				GameObject playerShip;
 				if (client) {
 					client = false;
@@ -57,7 +57,7 @@ public class NetworkManagerBehaviour : NetworkManager {
 				NetworkServer.AddPlayerForConnection (conn, playerShip, playerControllerId);
 				break;
 
-			}
+		//	}
 		}
 	}
 
