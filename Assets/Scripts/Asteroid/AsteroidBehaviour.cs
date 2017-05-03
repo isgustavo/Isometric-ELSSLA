@@ -5,12 +5,18 @@ using UnityEngine.Networking;
 
 public class AsteroidBehaviour : NetworkBehaviour, Destructible {
 
-	public event SpawnFragmentDelegate m_Delegate;
+	[SerializeField]
+	private GameObject _mesh;
+	[SerializeField]
+	private ParticleSystem _explosion;
 
-	public GameObject m_Mesh;
-	public ParticleSystem explosion_PS;
 
+	public event SpawnFragmentDelegate _delegate;
 
+	/// <summary>
+	/// Asteroid collider.
+	/// </summary>
+	/// <param name="collision">Object wich asteroid collided.</param>
 	void OnCollisionEnter(Collision collision) { 
 
 		BulletBehaviour bullet = collision.gameObject.GetComponent<BulletBehaviour> ();
@@ -19,37 +25,54 @@ public class AsteroidBehaviour : NetworkBehaviour, Destructible {
 		}
 
 	}
-
+		
+	/// <summary>
+	/// Method server-side to remove asteroid from game.
+	/// </summary>
 	[Command]
-	public void CmdDestroy () {
+	void CmdDestroy () {
 
-		StartCoroutine (Destroy());
+		StartCoroutine (RemoveAndCallFragmentCoroutine());
 	}
 
-	IEnumerator Destroy () {
+	/// <summary>
+	/// Coroutine to remove asteroid from game and call fragment spawn.
+	/// </summary>
+	IEnumerator RemoveAndCallFragmentCoroutine () {
 
-		RpcRemove ();
-		m_Delegate (this.gameObject);
+		RpcExplosion ();
+		_delegate (this.gameObject);
 		yield return new WaitForSeconds (3f);
 		RpcUnSpawn ();
 
 	}
 
+	/// <summary>
+	/// Method client-side to remove asteroid mesh and start explosion animation.
+	/// </summary>
 	[ClientRpc]
-	public void RpcRemove () {
+	void RpcExplosion () {
 
-		m_Mesh.SetActive(false);
-		explosion_PS.Play ();
+		_mesh.SetActive(false);
+		_explosion.Play ();
 	}
 
+	/// <summary>
+	/// Method client-side to unSpawn asteroid.
+	/// </summary>
 	[ClientRpc]
-	public void RpcUnSpawn () {
+	void RpcUnSpawn () {
 
-		m_Mesh.SetActive(true);
-		this.gameObject.SetActive (false);
-		NetworkServer.UnSpawn (this.gameObject);
+		_mesh.SetActive(true);
+		gameObject.SetActive (false);
+		NetworkServer.UnSpawn (gameObject);
 	}
 
+
+	/// <summary>
+	/// Destructible interface method.
+	/// </summary>
+	/// <returns>Returns points to destroy asteroid.</returns>
 	public int GetPoints() {
 
 		return 10;
