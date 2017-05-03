@@ -7,13 +7,17 @@ using Firebase;
 using Firebase.Database;
 using Firebase.Unity.Editor;
 using UnityEngine.UI;
-
+using System.Runtime.Serialization.Formatters.Binary; 
+using System.IO;
 
 public class PlayerBehaviour : MonoBehaviour {
 
 	public static PlayerBehaviour instance = null;
 
 	private Player _player;
+	public Player player {
+		get { return _player; }
+	}
 	private List<Player> _players;
 	public List<Player> players { 
 		get { 
@@ -33,6 +37,9 @@ public class PlayerBehaviour : MonoBehaviour {
 		if (instance == null) {
 
 			instance = this;
+			// Forces a different code path in the BinaryFormatter that doesn't rely on run-time code generation (which would break on iOS).
+			// http://answers.unity3d.com/questions/30930/why-did-my-binaryserialzer-stop-working.html
+			Environment.SetEnvironmentVariable("MONO_REFLECTION_SERIALIZER", "yes");
 
 		} else if (instance != this) {
 
@@ -45,12 +52,15 @@ public class PlayerBehaviour : MonoBehaviour {
 
 	void SetInit() {
 
+		MenuSceneBehaviour.instance.SetLoading (true);
 		if (FB.IsLoggedIn) {
 
-			//FB.API ("/me?fields=id,first_name", HttpMethod.GET, PlayerInfoCallBack);
+			FB.API ("/me?fields=id,first_name,score", HttpMethod.GET, PlayerInfoBasicCallBack);
 		} else {
 
-			Debug.Log ("FB is not logged in");
+			_player = new Player (UnityEngine.Random.Range(0,1000).ToString (), "", 0, LoadCoins());
+			MenuSceneBehaviour.instance.SetCoinsValue (_player.coins.count);
+			MenuSceneBehaviour.instance.SetLoading (false);
 		}
 	}
 
@@ -74,15 +84,99 @@ public class PlayerBehaviour : MonoBehaviour {
 
 	}
 
+	public void AlreadyLogInAction () {
+
+		FB.API ("/me?fields=id,first_name", HttpMethod.GET, PlayerInfoCallBack);
+	}
+
+	void PlayerInfoBasicCallBack(IResult result) {
+
+		if (result.Error != null) {
+
+			Debug.Log (result.Error);
+		} else {
+			Debug.Log ("callback"+ result.ResultDictionary.ToJson());
+
+			string id = result.ResultDictionary["id"].ToString ();
+			string name = result.ResultDictionary ["first_name"].ToString ();
+
+			IDictionary<string, object> data = (IDictionary<string, object>)result.ResultDictionary["score"];
+			List<object> listObj = (List<object>) data ["data"];
+
+			foreach (object obj in listObj) {
+
+				var entry = (Dictionary<string, object>)obj;
+				string highScore = entry ["score"].ToString ();
+
+				_player = new Player (id, name, Int32.Parse(highScore), LoadCoins());
+				MenuSceneBehaviour.instance.SetCoinsValue (_player.coins.count);
+				MenuSceneBehaviour.instance.SetLoading (false);
+				break;
+			}
+		} 
+	}
+
+
 	public void NewHighScore (int value) {
 
-		var scoreData = new Dictionary<string, string> ();
-		scoreData ["score"] = value.ToString ();
+		_player.highScore = value;
 
-		FB.API ("/me/scores", HttpMethod.POST, delegate (IGraphResult result) {
-			Debug.Log("Set score: "+ result.RawResult);
-		}, scoreData);
+		if (FB.IsLoggedIn) {
+			var scoreData = new Dictionary<string, string> ();
+			scoreData ["score"] = value.ToString ();
+
+			FB.API ("/me/scores", HttpMethod.POST, delegate (IGraphResult result) {
+				Debug.Log ("Set score: " + result.RawResult);
+			}, scoreData);
+		}
 	}
+
+	public void NewKD (string id) {
+
+		if (!FB.IsLoggedIn) 
+			return;
+
+		_reference.Child(UtilBehaviour.ROOT).Child(player.id).Child(UtilBehaviour.GROUP).Child(id).GetValueAsync().ContinueWith(task => {
+			if (task.IsFaulted) {
+				Debug.Log ("Firebase error:" + task.Exception );
+			}
+			else if (task.IsCompleted) {
+				DataSnapshot snapshot = task.Result;
+
+				if (snapshot.Value != null) {
+
+					int k = Int32.Parse(snapshot.Child("K").Value.ToString ()); 
+					int d = Int32.Parse(snapshot.Child("D").Value.ToString ()); 
+
+					k += 1;
+
+					KD playerKill = new KD (k, d);
+					string json = JsonUtility.ToJson(playerKill);
+					_reference.Child(UtilBehaviour.ROOT).Child(player.id).Child(UtilBehaviour.GROUP).Child(id).SetRawJsonValueAsync(json);
+
+					KD playerDead = new KD (d, k);
+					string json2 = JsonUtility.ToJson(playerDead);
+					_reference.Child(UtilBehaviour.ROOT).Child(id).Child(UtilBehaviour.GROUP).Child(player.id).SetRawJsonValueAsync(json2);
+
+				} else {
+
+					KD initialKill = new KD (1, 0);
+					string json = JsonUtility.ToJson(initialKill);
+					_reference.Child(UtilBehaviour.ROOT).Child(player.id).Child(UtilBehaviour.GROUP).Child(id).SetRawJsonValueAsync(json);
+
+
+					KD initialDead = new KD (0, 1);
+					string json2 = JsonUtility.ToJson(initialDead);
+					_reference.Child(UtilBehaviour.ROOT).Child(id).Child(UtilBehaviour.GROUP).Child(player.id).SetRawJsonValueAsync(json2);
+
+				}
+					
+			}	
+		});
+
+
+	}
+		
 
 	void AuthCallBack(IResult result) {
 
@@ -92,7 +186,7 @@ public class PlayerBehaviour : MonoBehaviour {
 		} else {
 			if (FB.IsLoggedIn) {
 
-				FB.API ("/me?fields=id,first_name", HttpMethod.GET, PlayerInfoCallBack);
+				FB.API ("/me?fields=id,first_name,score", HttpMethod.GET, PlayerInfoCallBack);
 
 			} else {
 				Debug.Log ("FB is not logged in");
@@ -106,7 +200,6 @@ public class PlayerBehaviour : MonoBehaviour {
 
 			Debug.Log (result.Error);
 		} else {
-			Debug.Log ("PlayerInfoCallBack");
 			string id = result.ResultDictionary["id"].ToString ();
 			string name = result.ResultDictionary ["first_name"].ToString ();
 			_player = new Player (id, name);
@@ -117,7 +210,7 @@ public class PlayerBehaviour : MonoBehaviour {
 
 
 	void ScoreCallBack (IResult result) {
-		Debug.Log ("ScoreCallBack");
+		//Debug.Log ("ScoreCallBack");
 		_players = new List<Player> ();
 		IDictionary<string, object> data = result.ResultDictionary;
 		List<object> listObj = (List<object>) data ["data"];
@@ -159,6 +252,47 @@ public class PlayerBehaviour : MonoBehaviour {
 				_observer.OnNotify();
 			}
 		});
+	}
+
+	public void UseCoin () {
+
+		_player.coins.UseCoin ();
+
+		SaveCoins (_player.coins);
+	}
+
+	private Coins LoadCoins() {
+		Coins coins;
+		BinaryFormatter bf = new BinaryFormatter ();
+		FileStream file;
+		if (File.Exists (Application.persistentDataPath + "/Coins.dat")) {
+			file = File.Open (Application.persistentDataPath + "/Coins.dat", FileMode.Open);
+			coins = (Coins) bf.Deserialize (file);
+
+			file.Close ();
+		} else {
+			file = File.Create (Application.persistentDataPath + "/Coins.dat");
+
+			coins = new Coins ();
+			bf.Serialize (file, coins);
+			file.Close (); 
+			SaveCoins (coins);
+		}
+
+		return coins;
+	}
+
+	private void SaveCoins (Coins coins) {
+
+		BinaryFormatter bf = new BinaryFormatter ();
+		FileStream file;
+		if (File.Exists (Application.persistentDataPath + "/Coins.dat")) {
+
+			file = File.Open (Application.persistentDataPath + "/Coins.dat", FileMode.Open);
+
+			bf.Serialize (file, coins);
+			file.Close (); 
+		} 
 
 	}
 

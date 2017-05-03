@@ -2,48 +2,47 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public delegate void RespawnDelegate ();
+
 public class GameSceneBehaviour : MonoBehaviour {
 
-	public enum State {
+	[SerializeField]
+	private RotationJoystickBehaviour _joystickButton;
+	[SerializeField]
+	private BoostButtonBehaviour _boostButton;
+	[SerializeField]
+	private ScoreBehaviour _scorePanel;
+	[SerializeField]
+	private DeadSceneBehaviour _deadScene;
 
-		Game,
-		Dead
+	public event RespawnDelegate _delegate;
+
+	public void Dead (int scored, bool isNewHighScore, string name) {
+
+		_deadScene.SetActive (scored, isNewHighScore, name);
+
+		_joystickButton.SetActive (false);
+		_boostButton.SetActive (false);
+		_scorePanel.gameObject.SetActive (false);
 	}
 
-	[SerializeField]
-	private GameObject _joystickButton;
-	[SerializeField]
-	private GameObject _boostButton;
-	[SerializeField]
-	private GameObject _scorePanel;
-	[SerializeField]
-	private GameObject _deadScene;
-	public GameObject deadScene {
-		get { return _deadScene; }
+	public void Respawn () {
+
+		_deadScene.gameObject.SetActive (false);
+
+		_joystickButton.SetActive (true);
+		_boostButton.SetActive (true);
+
+		_scorePanel.SetActive (true);
+
+		_delegate ();
 	}
 
-	public void SetState (State state) {
+	public void SetScore (int score, bool isNewHighScore) {
 
-		switch (state) {
-
-		case State.Game:
-
-			//_joystickButton.SetActive (true);
-			//_boostButton.SetActive (true);
-			//_scorePanel.SetActive (true);
-			_deadScene.gameObject.SetActive (false);
-
-			break;
-		case State.Dead:
-
-			//_joystickButton.SetActive (false);
-			//_boostButton.SetActive (false);
-			//_scorePanel.SetActive (false);
-			_deadScene.GetComponent<DeadSceneBehaviour>().Active ();
-
-			break;
-
-		}
-
+		_scorePanel._score = score;
+		_scorePanel.NewHighScore (isNewHighScore);
 	}
+
+
 }

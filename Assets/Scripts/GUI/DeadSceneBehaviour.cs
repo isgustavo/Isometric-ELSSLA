@@ -1,7 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using Facebook.Unity;
+
 
 public abstract class Observer: MonoBehaviour  {
 
@@ -20,6 +22,15 @@ public class DeadSceneBehaviour : Observer {
 	}
 
 
+	[SerializeField]
+	private Text _coinText;
+	[SerializeField]
+	private ScoreBehaviour _newHighScoreContent;
+
+	[SerializeField]
+	private Text _nameText;
+	[SerializeField]
+	private GameObject _killContent;
 
 	[SerializeField]
 	private GameObject _facebookConnectContent;
@@ -29,17 +40,29 @@ public class DeadSceneBehaviour : Observer {
 	private GameObject _scoreBoardListContent;
 	[SerializeField]
 	private GameObject _loadingContent;
-
 	[SerializeField]
 	private GameObject _scoreBoardCellPrefab;
 
-	public void Active () {
+	public void SetActive (int scored, bool isNewHighScore, string name) {
+
+		_coinText.text = PlayerBehaviour.instance.player.coins.count.ToString ();
+		_newHighScoreContent._score = scored;
+		_newHighScoreContent.NewHighScore (isNewHighScore);
+
+		if (!name.Equals ("")) {
+			_nameText.text = name;
+			_killContent.SetActive (true);
+		} else {
+
+			_killContent.SetActive (false);
+		}
 
 		gameObject.SetActive (true);
 
 		if (FB.IsLoggedIn) {
 
-			//UpdateScoreBoard (ScoreBoardState.Loading);
+			UpdateScoreBoard (ScoreBoardState.Loading);
+			PlayerBehaviour.instance.AlreadyLogInAction ();
 		} else {
 
 			UpdateScoreBoard (ScoreBoardState.NoLogIn);
@@ -74,8 +97,6 @@ public class DeadSceneBehaviour : Observer {
 			break;
 
 		}
-
-
 	}
 
 	public void LogInAction () {

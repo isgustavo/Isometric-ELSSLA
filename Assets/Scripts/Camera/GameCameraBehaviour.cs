@@ -10,17 +10,15 @@ public class GameCameraBehaviour : MonoBehaviour {
 	void Update () {
 
 		if (target == null) {
-			GameObject player = GameObject.FindGameObjectWithTag ("Player");
-			if (player != null) {
+			GameObject[] players = GameObject.FindGameObjectsWithTag ("Player");
 
-				target = player.transform;
-				offset = transform.position - target.position;
-				offset = new Vector3 (0, offset.y, offset.z);
-			} //else {
-
-				//Debug.LogError("Cant found player object");
-				//gameObject.SetActive (false);
-			//}
+			foreach(GameObject player in players) {
+				if (player.GetComponent<ControllerBehaviour>().isLocalPlayer) {
+					target = player.transform;
+					offset = transform.position - target.position;
+					offset = new Vector3 (0, offset.y, offset.z);
+				} 
+			}
 		} 
 
 	}

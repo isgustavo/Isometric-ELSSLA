@@ -12,34 +12,32 @@ public class ControllerBehaviour : NetworkBehaviour {
 	private float timeTilNextShot = .0f;
 	private float timeBetweenShot = .3f;
 
-	[SyncVar]
-	public string name;
-
 	[SyncVar (hook="OnScoreChange")]
-	public int score = INITIAL_SCORE;
+	public int _score = INITIAL_SCORE;
+	private bool _isNewHighScore = false;
+	private bool _isDead = false;
 
 	public ParticleSystem rocket_PS;
-
 	public ParticleSystem boost_PS;
 	private bool boosted = false;
 
 	public ParticleSystem exlosion_PS;
 
+	[SerializeField]
+	private GameObject _mesh;
 	private Rigidbody rb;
+	private BoxCollider cc;
 	BulletSpawnManagerBehaviour spawnManager;
-	ScoreManagerBehaviour scoreManager;
-	DeadManagerBehaviour deadManager;
 
 	public Transform bulletPoint;
 
 	private GameSceneBehaviour _gameSceneManager;
 
 	void Start () {
-		base.OnStartServer ();
 
 		rb = GetComponent<Rigidbody> ();
 		rb.position = transform.position;
-
+		cc = GetComponent<BoxCollider> ();
 
 		if (isServer) {
 			spawnManager = GameObject.Find ("BulletSpawnManager").GetComponent<BulletSpawnManagerBehaviour> ();
@@ -49,7 +47,7 @@ public class ControllerBehaviour : NetworkBehaviour {
 
 	void Update () {
 
-		if (!isLocalPlayer)
+		if (!isLocalPlayer || _isDead)
 			return;
 
 		if (RotationJoystickBehaviour.instance.IsDragging ()) {
@@ -58,7 +56,7 @@ public class ControllerBehaviour : NetworkBehaviour {
 			if (timeTilNextShot < 0) {
 				timeTilNextShot = timeBetweenShot;
 
-				CmdFire(bulletPoint.position, bulletPoint.rotation, gameObject.transform.name);
+				CmdFire(bulletPoint.position, bulletPoint.rotation, PlayerBehaviour.instance.player.id, PlayerBehaviour.instance.player.name);
 			}
 		}
 
@@ -68,7 +66,7 @@ public class ControllerBehaviour : NetworkBehaviour {
 		
 	void FixedUpdate () {
 
-		if (!isLocalPlayer)
+		if (!isLocalPlayer || _isDead)
 			return;
 
 		if (BoostButtonBehaviour.instance.IsPressed ()) {
@@ -92,23 +90,21 @@ public class ControllerBehaviour : NetworkBehaviour {
 
 	public override void OnStartLocalPlayer () {
 		base.OnStartServer ();
-		scoreManager = GameObject.FindGameObjectWithTag ("ScoreManager").GetComponent<ScoreManagerBehaviour> ();
-		//deadManager = GameObject.FindGameObjectWithTag ("DeadManager").GetComponent<DeadManagerBehaviour> ();
+
+		PlayerBehaviour.instance.UseCoin ();
 
 		GameObject obj = GameObject.FindGameObjectWithTag ("GameScene");
 		if (obj != null) {
 
 			_gameSceneManager = obj.GetComponent<GameSceneBehaviour> ();
-
+			_gameSceneManager._delegate += new RespawnDelegate (this.Respawn);
 		}
-
-		PlayerBehaviour.instance.observer = _gameSceneManager.deadScene.GetComponent<DeadSceneBehaviour> ();
 	}
 
 	public override void OnStartClient () {
 		base.OnStartClient ();
 
-		gameObject.transform.name = "PLAYER" + gameObject.GetComponent<NetworkIdentity> ().netId.ToString ();
+		gameObject.transform.name = PlayerBehaviour.instance.player.id;
 
 		if (!isServer)
 			return;
@@ -117,50 +113,69 @@ public class ControllerBehaviour : NetworkBehaviour {
 	}
 
 	[Command]
-	void CmdFire(Vector3 position, Quaternion rotation, string id) {
+	void CmdFire(Vector3 position, Quaternion rotation, string id, string name) {
 
 		GameObject obj = spawnManager.GetFromPool(position, rotation); 
 		BulletBehaviour bullet = obj.GetComponent<BulletBehaviour> ();
-		bullet.Fire (id);
+		bullet.Fire (id, name);
 
 		NetworkServer.Spawn(obj, spawnManager.assetId);
-		StartCoroutine (bullet.Remove ());
+		StartCoroutine (bullet.RemoveCoroutine ());
 	}
 
 
 	public void OnScoreChange (int value) {
 
-		/*score = value;
-		if (value > PlayerBehaviour.instance.GetHighScore ()) {
-			//highscore = value;
+		_score = value;
+		if (value > PlayerBehaviour.instance.player.highScore) {
+			_isNewHighScore = true;
+		} else {
+			_isNewHighScore = false;
 		}
 			
 		if (!isLocalPlayer)
 			return;
+		
+		_gameSceneManager.SetScore(_score, _isNewHighScore);
 
-		scoreManager.m_Score = score;*/
+	}
 
+	public void Respawn () {
+
+		_score = 0;
+		_mesh.SetActive (true);
+		_isDead = false;
 	}
 
 	void OnCollisionEnter(Collision collision) { 
 
-		//rocket_PS.Stop ();
-		_gameSceneManager.SetState(GameSceneBehaviour.State.Dead);
+		Debug.Log (collision.gameObject.transform+""+collision.gameObject.activeInHierarchy);
+
+		string name = "";
 		BulletBehaviour bullet = collision.gameObject.GetComponent<BulletBehaviour> ();
 		if (bullet != null) {
-		/*	PlayerBehaviour.instance.SaveKD (bullet.id);
-			ControllerBehaviour player = PlayersManager.instance.GetPlayer (bullet.id);
-
-			if (player != null) {
-
-
-				deadManager.SetActive (true, PlayerBehaviour.instance.GetHighScore (), score, player.name, PlayerBehaviour.instance.GetKD(bullet.id + ""));
+			//Debug.Log ("bullet.id"+bullet.id + "....PlayerBehaviour.instance.player.id" + PlayerBehaviour.instance.player.id);
+			if (bullet.id == PlayerBehaviour.instance.player.id) {
+				return;
 			}
-*/
+
+			PlayerBehaviour.instance.NewKD (bullet.id);
+			name = bullet.playerName;
+		}
+			
+		_isDead = true;
+		_mesh.SetActive (false);
+		rb.angularVelocity = Vector3.zero; 
+
+		rocket_PS.Stop ();
+		exlosion_PS.Play ();
+
+		if (_isNewHighScore) {
+
+			PlayerBehaviour.instance.NewHighScore (_score);
 		}
 
-
-		//exlosion_PS.Play ();
+		_gameSceneManager.Dead(_score, _isNewHighScore, name);
 
 	}
 }
