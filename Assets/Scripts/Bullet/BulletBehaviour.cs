@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
+/// <summary>
+/// Interface to make objects destructible.
+/// </summary>
 public interface Destructible {
 
 	int GetPoints ();
@@ -10,67 +13,91 @@ public interface Destructible {
 
 public class BulletBehaviour : NetworkBehaviour {
 
-	public float m_Lifetime = .7f;
-	public float m_ExplosionLifetime = 2f;
-	public float m_BulletVelocity = 12.0f;
-	public float m_SpreadDelay = .1f;
-	public float m_SpreadVelocity = .2f;
+	public const float _LIFETIME = .5f;
+	public const int _EXPLOSION_LIFETIME = 2;
+	public const int _BULLET_VELOCITY = 12;
 
 	[SyncVar]
 	private string _id;
 	public string id { get{ return _id; } }
+
 	[SyncVar]
 	private string _playerName;
 	public string playerName { get { return _playerName; } }
 
-	public GameObject m_Mesh;
-	public ParticleSystem rocket_PS;
-	public ParticleSystem impactExplosion_PS;
-	public ParticleSystem bulletExplosion_PS;
+	[SerializeField]
+	private GameObject _mesh;
+	[SerializeField]
+	private ParticleSystem _rocket;
+	[SerializeField]
+	private ParticleSystem _impactExplosion;
+	[SerializeField]
+	private ParticleSystem _bulletExplosion;
 
+	/// <summary>
+	/// Method to setup a new shoot. 
+	/// This method should be called from a server-side method.
+	/// </summary>
+	/// <param name="id">Player's id of who shot</param>
+	/// <param name="name">Player's name of who shot</param>
+	/// <param name="position">Start position</param>
+	/// <param name="rotation">Start rotation</param>
+	public void Fire (string id, string name, Vector3 position, Quaternion rotation) {
+		_id = id;
+		_playerName = name;
+		transform.position = position;
+		transform.rotation = rotation;
 
-	public void Fire (string id, string name) {
-		this._id = id;
-		this._playerName = name;
+		transform.gameObject.SetActive (true);
 
-		m_Mesh.SetActive (true);
+		_mesh.SetActive (true);
 
-
+		//TODO: need implovement, repeated calls to GetComponent() 
 		Rigidbody rb = GetComponentInChildren <Rigidbody> ();
-		rb.velocity = transform.forward * m_BulletVelocity;	
+		rb.velocity = transform.forward * _BULLET_VELOCITY;	
 		rb.angularVelocity = Vector3.zero; 
-		rocket_PS.Play ();
+		_rocket.Play ();
 
+		StartCoroutine (RemoveCoroutine ());
 	}
 
-	public IEnumerator RemoveCoroutine () {
+	/// <summary>
+	/// Coroutine method to remove bullet when you lifetime expired. 
+	/// This method should be called from a server-side method.
+	/// </summary>
+	IEnumerator RemoveCoroutine () {
 		
-		yield return new WaitForSeconds(.7f);
+		yield return new WaitForSeconds(_LIFETIME);
 		RpcRemove ();
-		yield return new WaitForSeconds (2f);
-		this.gameObject.SetActive (false);
+		yield return new WaitForSeconds (_EXPLOSION_LIFETIME);
+		gameObject.SetActive (false);
 		NetworkServer.UnSpawn(this.gameObject);
 	}
 
+	/// <summary>
+	/// Client-side method to sync with all client the bullet removed.
+	/// </summary>
 	[ClientRpc]
 	public void RpcRemove () {
 
-		m_Mesh.SetActive (false);
+		_mesh.SetActive (false);
 
-		rocket_PS.Stop ();
-		bulletExplosion_PS.Play ();
+		_rocket.Stop ();
+		_bulletExplosion.Play ();
+
 	}
 		
-
+	/// <summary>
+	/// Bullet collider.
+	/// </summary>
+	/// <param name="collision">Object wich bullet collided.</param>
 	void OnCollisionEnter(Collision collision) { 
-
-		if (_id == PlayerBehaviour.instance.player.id) {
-			return;
-		}
 
 		StopAllCoroutines ();
 		CmdDestroy ();
 
+		//Just the server has a list with all players id. 
+		//This id must be use to identify player and send his points.
 		if (!isServer)
 			return;
 
@@ -83,26 +110,35 @@ public class BulletBehaviour : NetworkBehaviour {
 			
 	}
 
+	/// <summary>
+	/// Server-side method to destoy bullet when hit something.
+	/// </summary>
 	[Command]
 	void CmdDestroy () {
-		StartCoroutine (Destroy ());
+		StartCoroutine (DestroyCoroutine ());
 
 	}
 
-	IEnumerator Destroy () {
-
+	/// <summary>
+	/// Coroutine method to destory bullet and unspawn.
+	/// This method should be called from a server-side method.
+	/// </summary>
+	IEnumerator DestroyCoroutine () {
 		RpcDestroy ();
-		yield return new WaitForSeconds (2f);
-		this.gameObject.SetActive (false);
-		NetworkServer.UnSpawn(this.gameObject);
+		yield return new WaitForSeconds (_EXPLOSION_LIFETIME);
+		gameObject.SetActive (false);
+		NetworkServer.UnSpawn(gameObject);
 	}
 
+
+	/// <summary>
+	/// Client-side method to sync with all client the bullet destroyed.
+	/// </summary>
 	[ClientRpc]
 	public void RpcDestroy () {
-
-		m_Mesh.SetActive (false);
-		rocket_PS.Stop ();
-		impactExplosion_PS.Play ();
+		_mesh.SetActive (false);
+		_rocket.Stop ();
+		_impactExplosion.Play ();
 	}
 
 }

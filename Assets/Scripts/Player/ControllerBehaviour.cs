@@ -115,12 +115,11 @@ public class ControllerBehaviour : NetworkBehaviour {
 	[Command]
 	void CmdFire(Vector3 position, Quaternion rotation, string id, string name) {
 
-		GameObject obj = spawnManager.GetFromPool(position, rotation); 
+		GameObject obj = spawnManager.GetFromPool(); 
 		BulletBehaviour bullet = obj.GetComponent<BulletBehaviour> ();
-		bullet.Fire (id, name);
+		bullet.Fire (id, name, position, rotation);
 
 		NetworkServer.Spawn(obj, spawnManager.assetId);
-		StartCoroutine (bullet.RemoveCoroutine ());
 	}
 
 

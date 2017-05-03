@@ -5,52 +5,54 @@ using UnityEngine.Networking;
 
 public class BulletSpawnManagerBehaviour : MonoBehaviour {
 
-	public int m_ObjectPoolSize = 12;
-	public GameObject m_Prefab;
-	public GameObject[] m_Pool;
+	private static int OBJECT_POOL_SIZE = 12;
 
-	public NetworkHash128 assetId { get; set; }
+	[SerializeField]
+	private GameObject _bulletPrefab;
+
+	private NetworkHash128 _assetId;
+	public NetworkHash128 assetId {get { return _assetId; }}
+
+	private GameObject[] _pool;
 
 	public delegate GameObject SpawnDelegate(Vector3 position, NetworkHash128 assetId);
 	public delegate void UnSpawnDelegate(GameObject spawned);
 
 
 	void Start() {
-		
-		assetId = m_Prefab.GetComponent<NetworkIdentity> ().assetId;
-		m_Pool = new GameObject[m_ObjectPoolSize];
-		for (int i = 0; i < m_ObjectPoolSize; ++i) {
-			m_Pool [i] =  (GameObject) Instantiate(m_Prefab, Vector3.zero, Quaternion.identity);
-			m_Pool[i].name = "BulletPoolObject" + i;
-			m_Pool[i].SetActive(false);
-			m_Pool [i].transform.parent = this.gameObject.transform;
+
+		_assetId = _bulletPrefab.GetComponent<NetworkIdentity> ().assetId;
+		_pool = new GameObject[OBJECT_POOL_SIZE];
+		for (int i = 0; i < OBJECT_POOL_SIZE; ++i) {
+			_pool [i] =  (GameObject) Instantiate(_bulletPrefab, Vector3.zero, Quaternion.identity);
+			_pool[i].name = "BulletPoolObject" + i;
+			_pool[i].SetActive(false);
+			_pool [i].transform.parent = this.gameObject.transform;
 		}
 
-		ClientScene.RegisterSpawnHandler(assetId, SpawnObject, UnSpawnObject);
+		ClientScene.RegisterSpawnHandler(_assetId, SpawnObject, UnSpawnObject);
 	}
 
-	public GameObject GetFromPool(Vector3 position, Quaternion rotation) {
 
-		foreach (GameObject obj in m_Pool) {
+	/// <summary>
+	/// Method to get an object from pool.
+	/// </summary>
+	/// <returns>Return bullet object available to use.</returns>
+	public GameObject GetFromPool() {
+
+		foreach (GameObject obj in _pool) {
 			if (!obj.activeInHierarchy) {
-				Debug.Log("Activating object " + obj.name );
-				obj.transform.position = position;
-				obj.transform.rotation = rotation;
-				obj.SetActive (true);
 				return obj;
 			}
 		}
-
-		Debug.LogError ("Could not grab object from pool, nothing available");
 		return null;
 	}
 
-	public GameObject SpawnObject(Vector3 position, NetworkHash128 assetId) {
-		return GetFromPool(position, Quaternion.identity);
+	GameObject SpawnObject(Vector3 position, NetworkHash128 assetId) {
+		return GetFromPool();
 	}
 
-	public void UnSpawnObject(GameObject spawned) {
-		Debug.Log ("Re-pooling object " + spawned.name);
+	void UnSpawnObject(GameObject spawned) {
 		spawned.SetActive (false);
 	}
 
