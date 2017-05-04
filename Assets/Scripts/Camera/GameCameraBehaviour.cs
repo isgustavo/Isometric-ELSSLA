@@ -20,7 +20,6 @@ public class GameCameraBehaviour : MonoBehaviour {
 				} 
 			}
 		} 
-
 	}
 
 	void LateUpdate () {

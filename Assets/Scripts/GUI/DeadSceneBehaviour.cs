@@ -45,7 +45,7 @@ public class DeadSceneBehaviour : Observer {
 
 	public void SetActive (int scored, bool isNewHighScore, string name) {
 
-		_coinText.text = PlayerBehaviour.instance.player.coins.count.ToString ();
+		//_coinText.text = PlayerBehaviour.instance.player.coins.count.ToString ();
 		_newHighScoreContent._score = scored;
 		_newHighScoreContent.NewHighScore (isNewHighScore);
 
@@ -62,7 +62,7 @@ public class DeadSceneBehaviour : Observer {
 		if (FB.IsLoggedIn) {
 
 			UpdateScoreBoard (ScoreBoardState.Loading);
-			PlayerBehaviour.instance.AlreadyLogInAction ();
+			//PlayerBehaviour.instance.AlreadyLogInAction ();
 		} else {
 
 			UpdateScoreBoard (ScoreBoardState.NoLogIn);
@@ -107,7 +107,7 @@ public class DeadSceneBehaviour : Observer {
 		
 	public override void OnNotify() {
 		UpdateScoreBoard (ScoreBoardState.Active);
-		int count = PlayerBehaviour.instance.players.Count;
+/*		int count = PlayerBehaviour.instance. players.Count;
 		for (int i = 0; i < count; i++) {
 			GameObject obj;
 			if (_scoreBoardListContent.transform.childCount > 0 
@@ -134,7 +134,7 @@ public class DeadSceneBehaviour : Observer {
 				cell.transform.SetParent (_scoreBoardListContent.transform);
 			}
 		}
-
+*/
 	}
 
 

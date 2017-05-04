@@ -14,18 +14,13 @@ public class PlayerBehaviour : MonoBehaviour {
 
 	public static PlayerBehaviour instance = null;
 
-	private Player _player;
-	public Player player {
-		get { return _player; }
-	}
-	private List<Player> _players;
-	public List<Player> players { 
-		get { 
-			return _players; 
-		} 
-	}
+	private Player _localPlayer;
+	public Player localPlayer { get; }
+	private List<Player> _facebookPlayers;
 
+	//Firebase database object
 	private DatabaseReference _reference; 
+
 	private Observer _observer;
 	public Observer observer {
 		get { return _observer; }
@@ -50,20 +45,29 @@ public class PlayerBehaviour : MonoBehaviour {
 
 	}
 
+	/// <summary>
+	/// Sets the init to Facebook Api.
+	/// If player logged in going to load from Facebook Api the player data and coins from local storage. See PlayerInfoBasicCallback callback.
+	/// If not logged in going to create a dumb player and load the coins from local storage.
+	/// </summary>
 	void SetInit() {
 
-		MenuSceneBehaviour.instance.SetLoading (true);
+		//MenuSceneBehaviour.instance.SetLoading (true);
 		if (FB.IsLoggedIn) {
 
-			FB.API ("/me?fields=id,first_name,score", HttpMethod.GET, PlayerInfoBasicCallBack);
+			FB.API ("/me?fields=id,first_name,score", HttpMethod.GET, PlayerInfoBasicCallback);
 		} else {
 
-			_player = new Player (UnityEngine.Random.Range(0,1000).ToString (), "", 0, LoadCoins());
-			MenuSceneBehaviour.instance.SetCoinsValue (_player.coins.count);
-			MenuSceneBehaviour.instance.SetLoading (false);
+			_localPlayer = new Player (LoadCoins());
+			//MenuSceneBehaviour.instance.SetCoinsValue (_player.coins.count);
+			//MenuSceneBehaviour.instance.SetLoading (false);
 		}
 	}
 
+	/// <summary>
+	/// Raises the hide unity event.
+	/// </summary>
+	/// <param name="isGameShown">If set to <c>true</c> is game shown.</param>
 	void OnHideUnity(bool isGameShown) {
 
 		if (!isGameShown) {
@@ -71,32 +75,18 @@ public class PlayerBehaviour : MonoBehaviour {
 		} else {
 			Time.timeScale = 1;
 		}
-
 	}
 
-
-	public void LogInAction () {
-
-		List<string> permissions = new List<string> ();
-		permissions.Add ("public_profile");
-
-		FB.LogInWithReadPermissions (permissions, AuthCallBack);
-
-	}
-
-	public void AlreadyLogInAction () {
-
-		FB.API ("/me?fields=id,first_name", HttpMethod.GET, PlayerInfoCallBack);
-	}
-
-	void PlayerInfoBasicCallBack(IResult result) {
+	/// <summary>
+	/// Callback to player basic infos from Facebook Api and Facebook Score Api.
+	/// </summary>
+	/// <param name="result">Callback result</param>
+	void PlayerInfoBasicCallback(IResult result) {
 
 		if (result.Error != null) {
-
-			Debug.Log (result.Error);
+			// TODO: DO SAMETHING
 		} else {
-			Debug.Log ("callback"+ result.ResultDictionary.ToJson());
-
+			
 			string id = result.ResultDictionary["id"].ToString ();
 			string name = result.ResultDictionary ["first_name"].ToString ();
 
@@ -108,119 +98,104 @@ public class PlayerBehaviour : MonoBehaviour {
 				var entry = (Dictionary<string, object>)obj;
 				string highScore = entry ["score"].ToString ();
 
-				_player = new Player (id, name, Int32.Parse(highScore), LoadCoins());
-				MenuSceneBehaviour.instance.SetCoinsValue (_player.coins.count);
-				MenuSceneBehaviour.instance.SetLoading (false);
+				_localPlayer = new Player (id, name, Int32.Parse(highScore), LoadCoins());
+				//MenuSceneBehaviour.instance.SetCoinsValue (_player.coins.count);
+				//MenuSceneBehaviour.instance.SetLoading (false);
 				break;
 			}
 		} 
 	}
 
 
-	public void NewHighScore (int value) {
+	/// <summary>
+	/// Facebook login request. See AuthCallBack callback.
+	/// </summary>
+	public void LogInAction () {
 
-		_player.highScore = value;
+		List<string> permissions = new List<string> ();
+		permissions.Add ("public_profile");
 
-		if (FB.IsLoggedIn) {
-			var scoreData = new Dictionary<string, string> ();
-			scoreData ["score"] = value.ToString ();
-
-			FB.API ("/me/scores", HttpMethod.POST, delegate (IGraphResult result) {
-				Debug.Log ("Set score: " + result.RawResult);
-			}, scoreData);
-		}
-	}
-
-	public void NewKD (string id) {
-
-		if (!FB.IsLoggedIn) 
-			return;
-
-		_reference.Child(UtilBehaviour.ROOT).Child(player.id).Child(UtilBehaviour.GROUP).Child(id).GetValueAsync().ContinueWith(task => {
-			if (task.IsFaulted) {
-				Debug.Log ("Firebase error:" + task.Exception );
-			}
-			else if (task.IsCompleted) {
-				DataSnapshot snapshot = task.Result;
-
-				if (snapshot.Value != null) {
-
-					int k = Int32.Parse(snapshot.Child("K").Value.ToString ()); 
-					int d = Int32.Parse(snapshot.Child("D").Value.ToString ()); 
-
-					k += 1;
-
-					KD playerKill = new KD (k, d);
-					string json = JsonUtility.ToJson(playerKill);
-					_reference.Child(UtilBehaviour.ROOT).Child(player.id).Child(UtilBehaviour.GROUP).Child(id).SetRawJsonValueAsync(json);
-
-					KD playerDead = new KD (d, k);
-					string json2 = JsonUtility.ToJson(playerDead);
-					_reference.Child(UtilBehaviour.ROOT).Child(id).Child(UtilBehaviour.GROUP).Child(player.id).SetRawJsonValueAsync(json2);
-
-				} else {
-
-					KD initialKill = new KD (1, 0);
-					string json = JsonUtility.ToJson(initialKill);
-					_reference.Child(UtilBehaviour.ROOT).Child(player.id).Child(UtilBehaviour.GROUP).Child(id).SetRawJsonValueAsync(json);
-
-
-					KD initialDead = new KD (0, 1);
-					string json2 = JsonUtility.ToJson(initialDead);
-					_reference.Child(UtilBehaviour.ROOT).Child(id).Child(UtilBehaviour.GROUP).Child(player.id).SetRawJsonValueAsync(json2);
-
-				}
-					
-			}	
-		});
-
+		FB.LogInWithReadPermissions (permissions, AuthCallback);
 
 	}
-		
 
-	void AuthCallBack(IResult result) {
+	/// <summary>
+	/// Facebook auths callback. If after callback the player be logged in to Facebook will call PlayerInfoCallback callback.
+	/// </summary>
+	/// <param name="result">Callback result</param>
+	void AuthCallback(IResult result) {
 
 		if (result.Error != null) {
 
-			Debug.Log (result.Error);
+			//Debug.Log (result.Error);
+			//TODO:
 		} else {
 			if (FB.IsLoggedIn) {
 
-				FB.API ("/me?fields=id,first_name,score", HttpMethod.GET, PlayerInfoCallBack);
+				FB.API ("/me?fields=id,first_name,score", HttpMethod.GET, PlayerInfoCallback);
 
 			} else {
-				Debug.Log ("FB is not logged in");
+				//Debug.Log ("FB is not logged in");
+				//TODO:
 			}
 		}
 	}
 
-	void PlayerInfoCallBack (IResult result) {
+	/// <summary>
+	/// Facebook player basic infos callback. Being the first login is added to coins the gift for logged in.
+	/// At last is call the ScoreAndKDCallback callback.
+	/// </summary>
+	/// <param name="result">Result.</param>
+	void PlayerInfoCallback (IResult result) {
 
 		if (result.Error != null) {
 
-			Debug.Log (result.Error);
+			//Debug.Log (result.Error);
+			//TODO:
 		} else {
 			string id = result.ResultDictionary["id"].ToString ();
 			string name = result.ResultDictionary ["first_name"].ToString ();
-			_player = new Player (id, name);
+			string highScore = "0";
 
-			FB.API ("/app/scores?fields=score,user.limit(30)", HttpMethod.GET, ScoreCallBack);
+			IDictionary<string, object> data = (IDictionary<string, object>)result.ResultDictionary["score"];
+			List<object> listObj = (List<object>) data ["data"];
+
+			foreach (object obj in listObj) {
+
+				var entry = (Dictionary<string, object>)obj;
+				highScore = entry ["score"].ToString ();
+				break;
+			}
+
+			Coins coins = _localPlayer._coins;
+			coins.SetFacebookGift ();
+
+			_localPlayer = new Player (id, name, Int32.Parse (highScore), coins);
+
+			FB.API ("/app/scores?fields=score,user.limit(30)", HttpMethod.GET, ScoreAndKDCallback);
 		} 
 	}
 
+	/// <summary>
+	/// Facebook score api callback to load the 30 first facebook friends by score. 
+	/// After that is made the Firebase load to get KD values by player.
+	/// </summary>
+	/// <param name="result">callback result.</param>
+	void ScoreAndKDCallback (IResult result) {
 
-	void ScoreCallBack (IResult result) {
-		//Debug.Log ("ScoreCallBack");
-		_players = new List<Player> ();
+		_facebookPlayers = new List<Player> ();
+
 		IDictionary<string, object> data = result.ResultDictionary;
 		List<object> listObj = (List<object>) data ["data"];
 
 		FirebaseApp.DefaultInstance.SetEditorDatabaseUrl(UtilBehaviour.FIREBASE_REALTIME_DATABASE_PATH);
 		_reference = FirebaseDatabase.DefaultInstance.RootReference;
 
-		_reference.Child (UtilBehaviour.ROOT).Child (_player.id).Child (UtilBehaviour.GROUP).GetValueAsync ().ContinueWith (task => {
+		_reference.Child (UtilBehaviour.ROOT).Child (_localPlayer._id).Child (UtilBehaviour.GROUP).GetValueAsync ().ContinueWith (task => {
 			if (task.IsFaulted) {
-				Debug.Log ("Firebase error:" + task.Exception );
+
+				//Debug.Log ("Firebase error:" + task.Exception );
+				//TODO:
 			} else if (task.IsCompleted) {
 				DataSnapshot snapshot = task.Result;
 
@@ -239,29 +214,113 @@ public class PlayerBehaviour : MonoBehaviour {
 						d = Int32.Parse(snapshot.Child(id).Child("D").Value.ToString ()); 
 					} 
 
-					if (_player.id == id) {
-						_player.highScore = Int32.Parse(highScore);
-						_players.Add (_player);
-					} else {
+					KD kd = null;
+					if (_localPlayer._id != id) {
+						kd = new KD (k, d);
+					} 
 
-						Player player = new Player (id, name, Int32.Parse(highScore), k , d);
-						_players.Add (player);
-					}
+					Player player = new Player (id, name, Int32.Parse(highScore), kd);
+					_facebookPlayers.Add (player);
+
 				}
-				Debug.Log ("OnNotify");
-				_observer.OnNotify();
+				//Debug.Log ("OnNotify");
+				//_observer.OnNotify();
 			}
 		});
 	}
 
-	public void UseCoin () {
 
-		_player.coins.UseCoin ();
+	/// <summary>
+	/// Save on Facebook Score Api the new players high score.
+	/// </summary>
+	/// <param name="value">High score value</param>
+	public void SaveNewHighScore (int value) {
 
-		SaveCoins (_player.coins);
+		_localPlayer._highScore = value;
+
+		if (FB.IsLoggedIn) {
+			var scoreData = new Dictionary<string, string> ();
+			scoreData ["score"] = value.ToString ();
+
+			FB.API ("/me/scores", HttpMethod.POST, delegate (IGraphResult result) {
+				//Debug.Log ("Set score: " + result.RawResult);
+			}, scoreData);
+		}
 	}
 
-	private Coins LoadCoins() {
+	/// <summary>
+	/// Save on Firebase database the new KD. Two request are made to save values by player who was destroyed. 
+	/// KD values are key-value below a ID player. That ID is the same use on Facebook Api, so the player need to be logged.
+	/// ID Player (local player)
+	///    - KD
+	///        - ID player (player who destroyed local player)
+	///             - K : value
+	///             - D : value
+	/// 
+	/// </summary>
+	/// <param name="id">Player id</param>
+	public void SaveNewKD (string id) {
+
+		if (!FB.IsLoggedIn) 
+			return;
+
+		//Load KD values by foe id
+		_reference.Child(UtilBehaviour.ROOT).Child(_localPlayer._id).Child(UtilBehaviour.GROUP).Child(id).GetValueAsync().ContinueWith(task => {
+			if (task.IsFaulted) {
+				//Debug.Log ("Firebase error:" + task.Exception );
+				//TODO:
+			}
+			else if (task.IsCompleted) {
+				DataSnapshot snapshot = task.Result;
+
+				if (snapshot.Value != null) {
+
+					int k = Int32.Parse(snapshot.Child("K").Value.ToString ()); 
+					int d = Int32.Parse(snapshot.Child("D").Value.ToString ()); 
+
+					k += 1;
+
+					//Save new KD to player who destroyed the local player
+					KD playerKill = new KD (k, d);
+					string json = JsonUtility.ToJson(playerKill);
+					_reference.Child(UtilBehaviour.ROOT).Child(_localPlayer._id).Child(UtilBehaviour.GROUP).Child(id).SetRawJsonValueAsync(json);
+
+					//Save new KD to local player
+					KD playerDead = new KD (d, k);
+					string json2 = JsonUtility.ToJson(playerDead);
+					_reference.Child(UtilBehaviour.ROOT).Child(id).Child(UtilBehaviour.GROUP).Child(_localPlayer._id).SetRawJsonValueAsync(json2);
+
+				} else {
+
+					//First interaction between two player
+					KD initialKill = new KD (1, 0);
+					string json = JsonUtility.ToJson(initialKill);
+					_reference.Child(UtilBehaviour.ROOT).Child(_localPlayer._id).Child(UtilBehaviour.GROUP).Child(id).SetRawJsonValueAsync(json);
+				
+					KD initialDead = new KD (0, 1);
+					string json2 = JsonUtility.ToJson(initialDead);
+					_reference.Child(UtilBehaviour.ROOT).Child(id).Child(UtilBehaviour.GROUP).Child(_localPlayer._id).SetRawJsonValueAsync(json2);
+
+				}
+			}	
+		});
+	}
+
+	/// <summary>
+	/// Uses the coin. Everytime spawn cost coin.
+	/// </summary>
+	public void UseCoin () {
+
+		_localPlayer._coins.UseCoin ();
+
+		SaveCoins (_localPlayer._coins);
+	}
+
+	/// <summary>
+	/// Load from local storage the coins data.
+	/// </summary>
+	/// <returns>Coins loaded.</returns>
+	Coins LoadCoins() {
 		Coins coins;
 		BinaryFormatter bf = new BinaryFormatter ();
 		FileStream file;
@@ -282,7 +341,11 @@ public class PlayerBehaviour : MonoBehaviour {
 		return coins;
 	}
 
-	private void SaveCoins (Coins coins) {
+	/// <summary>
+	/// Saves the coins.
+	/// </summary>
+	/// <param name="coins">Coins.</param>
+	void SaveCoins (Coins coins) {
 
 		BinaryFormatter bf = new BinaryFormatter ();
 		FileStream file;
@@ -296,341 +359,4 @@ public class PlayerBehaviour : MonoBehaviour {
 
 	}
 
-	/*
-	private void SetFriends (List<object> listObj) {
-
-		FirebaseApp.DefaultInstance.SetEditorDatabaseUrl("https://kdfacebookfriends.firebaseio.com/");
-		reference = FirebaseDatabase.DefaultInstance.RootReference;
-
-		reference.Child ("users").Child (player.m_Id).Child ("KD").GetValueAsync ().ContinueWith (task => {
-			if (task.IsFaulted) {
-				Debug.Log ("Firebase error:" + task.Exception );
-			} else if (task.IsCompleted) {
-				DataSnapshot snapshot = task.Result;
-
-				foreach (object obj in listObj) {
-
-					var entry = (Dictionary<string, object>) obj;
-					var user = (Dictionary<string, object>) entry ["user"];
-
-					string id = user ["id"].ToString ();
-					string name = user ["name"].ToString ();
-					string highScore = entry ["score"].ToString ();
-					int k = 0, d = 0;
-
-					if (snapshot.Child(id).Value != null) {
-						k = Int32.Parse(snapshot.Child(id).Child("k").Value.ToString ()); 
-						d = Int32.Parse(snapshot.Child(id).Child("d").Value.ToString ()); 
-					} 
-
-					if (id == player.m_Id) {
-						player.m_Highscore = Int32.Parse(highScore);
-						players.Add (player);
-					} else {
-
-						Player player = new Player (id, true, name, Int32.Parse(highScore), k , d);
-						players.Add (player);
-					}
-				}
-
-				UpdateList ();
-
-			}
-		});
-
-
-	}
-
-*/
-
 }
-
-
-/*
-[Serializable]
-public class KD {
-
-	public int kill;
-	public int death;
-
-	public KD (int k, int d) {
-
-		kill = k;
-		death = d;
-	}
-}
-
-[Serializable]
-public class KDData {
-
-	Dictionary <string, KD> kds = new Dictionary <string, KD> ();
-
-	public void Add (string k, KD v) {
-
-		kds.Add (k, v);
-	}
-
-	public KD Get (string key) {
-
-		if (kds.ContainsKey (key)) {
-			return kds [key];
-		}
-		return new KD (0,0);
-	}
-}
-
-public class PlayerBehaviour : MonoBehaviour {
-
-	public static PlayerBehaviour instance = null;
-
-	private string fbName;
-	private Sprite fbPicture;
-
-	private KDData data = new KDData();
-	private Dictionary <string, Player> players = new Dictionary <string, Player> ();
-
-	void Awake () {
-
-		if (instance == null) {
-
-			instance = this;
-			// Forces a different code path in the BinaryFormatter that doesn't rely on run-time code generation (which would break on iOS).
-			// http://answers.unity3d.com/questions/30930/why-did-my-binaryserialzer-stop-working.html
-			Environment.SetEnvironmentVariable("MONO_REFLECTION_SERIALIZER", "yes");
-		} else if (instance != this) {
-
-			Destroy (gameObject);
-		}
-
-		data = LoadData ();
-		FB.Init (SetInit, OnHideUnity);
-
-	}
-		
-
-	void SetInit() {
-
-		if (FB.IsLoggedIn) {
-
-			LoadFbStats ();
-		} else {
-
-			fbName = GetGuestName ();
-		}
-	}
-
-	void OnHideUnity(bool isGameShown) {
-
-		if (!isGameShown) {
-			Time.timeScale = 0;
-		} else {
-			Time.timeScale = 1;
-		}
-
-	}
-
-	public void LogIn () {
-
-		List<string> permissions = new List<string> ();
-		permissions.Add ("public_profile");
-
-		FB.LogInWithReadPermissions (permissions, AuthCallBack);
-	}
-
-	void AuthCallBack(IResult result) {
-
-		if (result.Error != null) {
-			Debug.Log (result.Error);
-		} else {
-			if (FB.IsLoggedIn) {
-
-				LoadFbStats ();
-
-			} else {
-				Debug.Log ("FB is not logged in");
-			}
-		}
-	}
-
-	void LoadFbStats () {
-
-		//FB.API ("/me?fields=first_name", HttpMethod.GET, UserNameCallBack);
-		//FB.API ("/me/picture?type=square&height=128&width=128", HttpMethod.GET, ProfilePicCallBack);
-		FB.API ("/app/scores?fields=score,user.limit(30)", HttpMethod.GET, FBCallBack);
-	}
-
-	private void FBCallBack (IResult result) {
-		//result.
-
-		Debug.Log ("Error: "+ result.Error);
-
-		IDictionary<string, object> data = result.ResultDictionary;
-		List<object> listObj = (List<object>)data ["data"];
-
-		foreach (object obj in listObj) {
-
-			var entry = (Dictionary<string, object>)obj;
-			var user = (Dictionary<string, object>)entry ["user"];
-
-			string id = user ["id"].ToString ();
-			string name = user ["name"].ToString ();
-			string highScore = entry ["score"].ToString ();
-
-			Debug.Log ("id"+id + " name" + name + "highScore" + highScore);
-			Player player = new Player (id, name, Int32.Parse(highScore), this.data.Get(id));
-		    players[id] = player;
-		}
-
-		GameObject scoreBoardManager = GameObject.FindGameObjectWithTag ("DeadManager");
-		if (scoreBoardManager != null) {
-			scoreBoardManager.GetComponent<DeadManagerBehaviour> ().UpdateScoreBoardList ();
-		}
-
-	}
-
-	KDData LoadData () {
-
-		if (!File.Exists(Application.persistentDataPath + "/SaveData" + ".dat")) {
-			
-			Debug.Log("File Not Found! Load Failed.");
-			return null;
-		}
-
-		BinaryFormatter bf = new BinaryFormatter(); 
-		FileStream file = File.Open(Application.persistentDataPath + "/SaveData" + ".dat", FileMode.Open); 
-		KDData data = (KDData) bf.Deserialize(file); 
-		file.Close(); 
-
-		return data;
-	}
-
-	void SaveData () {
-
-		BinaryFormatter bf = new BinaryFormatter();
-		FileStream file = File.Open(Application.persistentDataPath + "/SaveData" + ".dat", FileMode.OpenOrCreate);
-
-		KDData saveData = data;
-		bf.Serialize(file, saveData);
-		file.Close();
-	}
-
-	public string GetShip () {
-
-		return "InitialShip";
-	}
-
-	private string GetGuestName () {
-
-		List<string> firstNameSyllables = new List<string>();
-		firstNameSyllables.Add("mon");
-		firstNameSyllables.Add("fay");
-		firstNameSyllables.Add("shi");
-		firstNameSyllables.Add("zag");
-		firstNameSyllables.Add("blarg");
-		firstNameSyllables.Add("rash");
-		firstNameSyllables.Add("izen");
-
-		string firstName = "";
-		int numberOfSyllablesInFirstName = UnityEngine.Random.Range (2, 4);
-		for (int i = 0; i < numberOfSyllablesInFirstName; i++) {
-			firstName += firstNameSyllables[UnityEngine.Random.Range(0, firstNameSyllables.Count)];
-		}
-		string firstNameLetter = "";
-		firstNameLetter = firstName.Substring(0,1);
-		firstName = firstName.Remove(0,1);
-		firstNameLetter = firstNameLetter.ToUpper();
-		firstName = firstNameLetter + firstName;
-		return "GUEST::"+firstName;
-	}
-
-	public string GetName () {
-
-		return fbName;
-	}
-
-	public int GetHighScore () {
-
-		return 9999999;
-	}
-
-
-	public List<Player> GetPlayers() {
-
-		return players.Values.ToList<Player> ();
-	}
-
-	public KD GetKD (string key) {
-
-		return data.Get (key);
-	}
-
-	public void SaveKill (string id) {
-		
-		KD kd = data.Get (id);
-
-		if (kd != null) {
-			kd.kill += 1;
-		} else {
-
-			kd = new KD ();
-			kd.kill += 1;
-			data.Add (id, kd);
-		}
-	}
-
-	public void SaveDeath (string id) {
-
-		KD kd = data.Get (id);
-
-		if (kd != null) {
-			kd.death += 1;
-		} else {
-
-			kd = new KD ();
-			kd.death += 1;
-			data.Add (id, kd);
-		}
-	}
-
-	void UserNameCallBack (IResult result) {
-
-		if (result.Error == null) {
-
-			fbName = result.ResultDictionary ["first_name"].ToString ();
-
-		} else {
-			Debug.Log (result.Error);
-		}
-
-	}
-
-/*
-
-
-	void ProfilePicCallBack(IGraphResult result) {
-
-		if (result.Texture != null) {
-
-			fbPicture = Sprite.Create (result.Texture, new Rect (0, 0, 128, 128), new Vector2 ());
-		} else {
-			Debug.Log (result.Error);
-		}
-	}
-
-
-	public void SetScore () {
-
-		var scoreData = new Dictionary<string, string> ();
-		scoreData ["score"] = "999999990";
-		//scoreData.Add ("k", "6");
-
-		FB.API ("/me/scores", HttpMethod.POST, delegate (IGraphResult result) {
-			Debug.Log("Set score: "+ result.RawResult);
-		}, scoreData);
-
-		FB.API ("/app/scores?fields=score,user.limit(30)", HttpMethod.GET, HighScoreCallBack);
-	}
-
-
-
-}*/

@@ -7,6 +7,10 @@ public class PlayersManager : NetworkBehaviour {
 
 	public static PlayersManager instance;
 
+	/// <summary>
+	/// Dictionary with player id key and ControllerBehaviour class context as value. 
+	/// It is need the ControllerBehaivour context to acess the sync var _score
+	/// </summary>
 	private Dictionary<string, ControllerBehaviour> players = new Dictionary<string, ControllerBehaviour> ();
 
 	void Awake () {
@@ -19,13 +23,19 @@ public class PlayersManager : NetworkBehaviour {
 		}
 	}
 		
+	/// <summary>
+	/// Method to add a new player. This method must be call on server-side context
+	/// </summary>
 	public void AddPlayer (string playerId, ControllerBehaviour player) {
 		players.Add (playerId, player);
 
 	}
 
-	public ControllerBehaviour GetPlayer (string playerId) {
-		return players [playerId];
+	/// <summary>
+	/// Method to get a player with especific id. This method must be call on server-side context
+	/// </summary>
+	public ControllerBehaviour GetPlayerById (string id) {
+		return players [id];
 
 	}
 }

@@ -7,67 +7,54 @@ using System.Globalization;
 [Serializable]
 public class Coins {
 
+	private const int INITIAL_COUNT = 10;
+	private const int NORMAL_COST = 1;
+	private const int FACEBOOK_LOGGIN_GIFT = 5;
+	private const int DAILY_GIFT = 1;
+	private const int VIDEO_GIFT = 5;
+
 	private int _count;
 	public int count {
 		get { return _count; }
 	}
-	//private DateTime _lastGiftOpen;
 
 
 	public Coins () {
 
-		_count = 15;
-	//	_lastGiftOpen = DateTime.Now;
+		_count = INITIAL_COUNT;
 
 	}
 
 
+	/// <summary>
+	/// Uses the coin. Every spawn/respawn cost a coin.
+	/// </summary>
 	public void UseCoin () {
 
-		_count -= 1;
+		_count -= NORMAL_COST;
 	}
 
-	//public Coins (int count, DateTime lastGiftOpen) {
-	//	_count = count;
-	//	_lastGiftOpen = lastGiftOpen;
+	/// <summary>
+	/// Sets the facebook gift. When player logged in to Facebook him receives a gift coins.
+	/// </summary>
+	public void SetFacebookGift() {
 
-	//}
-
-/*
-	public void Save (int score) {
-
-		BinaryFormatter bf = new BinaryFormatter ();
-		FileStream file;
-		if (File.Exists (Application.persistentDataPath + "/PlayerInfo.dat")) {
-
-			file = File.Open (Application.persistentDataPath + "/PlayerInfo.dat", FileMode.Open);
-
-			if (score > player.highscore) {
-				player.highscore = score;
-			}
-
-			bf.Serialize (file, player);
-			file.Close (); 
-		} 
-
+		_count += FACEBOOK_LOGGIN_GIFT;
 	}
 
-	void LoadInfo () {
+	/// <summary>
+	/// Sets the daily gift. Each 24 hour the player receives a gift coins.
+	/// </summary>
+	public void SetDailyGift () {
 
-		BinaryFormatter bf = new BinaryFormatter ();
-		FileStream file;
-		if (File.Exists (Application.persistentDataPath + "/PlayerInfo.dat")) {
-			file = File.Open (Application.persistentDataPath + "/PlayerInfo.dat", FileMode.Open);
-			player = (PlayerData) bf.Deserialize (file);
+		_count += DAILY_GIFT;
+	}
 
-			file.Close ();
-		} else {
-			file = File.Create (Application.persistentDataPath + "/PlayerInfo.dat");
+	/// <summary>
+	/// Sets the video gift. Each video watched on game the player receives a gift coins.
+	/// </summary>
+	public void SetVideoGift () {
 
-			player = new PlayerData ();
-			bf.Serialize (file, player);
-			file.Close (); 
-		}
-
-	}*/
+		_count += VIDEO_GIFT;
+	}
 }

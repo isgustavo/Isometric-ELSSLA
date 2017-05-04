@@ -24,7 +24,7 @@ public class ScoreManagerBehaviour : MonoBehaviour {
 			lastScore += Mathf.CeilToInt ((m_Score - lastScore) * .1f);
 			_scoreText.text = lastScore.ToString ("000000000");
 
-			if (lastScore > PlayerBehaviour.instance.player.highScore) {
+			if (lastScore > PlayerBehaviour.instance.localPlayer._highScore) {
 				_newHighScoreContent.SetActive (true);
 
 			}

@@ -104,7 +104,7 @@ public class BulletBehaviour : NetworkBehaviour {
 		GameObject hit = collision.gameObject;
 		Destructible obj = hit.GetComponent<Destructible> ();
 		if (obj != null) {
-			ControllerBehaviour player = PlayersManager.instance.GetPlayer (_id);
+			ControllerBehaviour player = PlayersManager.instance.GetPlayerById (_id);
 			player._score += obj.GetPoints ();
 		}
 			
