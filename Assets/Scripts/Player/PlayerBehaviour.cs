@@ -15,32 +15,35 @@ public class PlayerBehaviour : MonoBehaviour {
 	public static PlayerBehaviour instance = null;
 
 	private Player _localPlayer;
-	public Player localPlayer { get; }
+	public Player localPlayer { get { return _localPlayer; }}
 	private List<Player> _facebookPlayers;
 
 	//Firebase database object
 	private DatabaseReference _reference; 
 
+	//GUI observer
+	[SerializeField]
 	private Observer _observer;
-	public Observer observer {
-		get { return _observer; }
-		set { _observer = value; }
-	}
 
 	void Awake () {
-
+		
 		if (instance == null) {
 
 			instance = this;
 			// Forces a different code path in the BinaryFormatter that doesn't rely on run-time code generation (which would break on iOS).
 			// http://answers.unity3d.com/questions/30930/why-did-my-binaryserialzer-stop-working.html
 			Environment.SetEnvironmentVariable("MONO_REFLECTION_SERIALIZER", "yes");
-
+			DontDestroyOnLoad (this);
 		} else if (instance != this) {
 
 			Destroy (gameObject);
 		}
-			
+
+
+	}
+
+	void Start () {
+		
 		FB.Init (SetInit, OnHideUnity);
 
 	}
@@ -59,8 +62,8 @@ public class PlayerBehaviour : MonoBehaviour {
 		} else {
 
 			_localPlayer = new Player (LoadCoins());
-			//MenuSceneBehaviour.instance.SetCoinsValue (_player.coins.count);
-			//MenuSceneBehaviour.instance.SetLoading (false);
+			_observer.OnNotify ();
+
 		}
 	}
 
@@ -99,8 +102,7 @@ public class PlayerBehaviour : MonoBehaviour {
 				string highScore = entry ["score"].ToString ();
 
 				_localPlayer = new Player (id, name, Int32.Parse(highScore), LoadCoins());
-				//MenuSceneBehaviour.instance.SetCoinsValue (_player.coins.count);
-				//MenuSceneBehaviour.instance.SetLoading (false);
+				_observer.OnNotify ();
 				break;
 			}
 		} 
@@ -324,13 +326,13 @@ public class PlayerBehaviour : MonoBehaviour {
 		Coins coins;
 		BinaryFormatter bf = new BinaryFormatter ();
 		FileStream file;
-		if (File.Exists (Application.persistentDataPath + "/Coins.dat")) {
-			file = File.Open (Application.persistentDataPath + "/Coins.dat", FileMode.Open);
+		if (File.Exists (Application.persistentDataPath + "/Coins4.dat")) {
+			file = File.Open (Application.persistentDataPath + "/Coins4.dat", FileMode.Open);
 			coins = (Coins) bf.Deserialize (file);
 
 			file.Close ();
 		} else {
-			file = File.Create (Application.persistentDataPath + "/Coins.dat");
+			file = File.Create (Application.persistentDataPath + "/Coins4.dat");
 
 			coins = new Coins ();
 			bf.Serialize (file, coins);
@@ -349,9 +351,9 @@ public class PlayerBehaviour : MonoBehaviour {
 
 		BinaryFormatter bf = new BinaryFormatter ();
 		FileStream file;
-		if (File.Exists (Application.persistentDataPath + "/Coins.dat")) {
+		if (File.Exists (Application.persistentDataPath + "/Coins4.dat")) {
 
-			file = File.Open (Application.persistentDataPath + "/Coins.dat", FileMode.Open);
+			file = File.Open (Application.persistentDataPath + "/Coins4.dat", FileMode.Open);
 
 			bf.Serialize (file, coins);
 			file.Close (); 

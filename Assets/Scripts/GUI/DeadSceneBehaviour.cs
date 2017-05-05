@@ -5,10 +5,7 @@ using UnityEngine.UI;
 using Facebook.Unity;
 
 
-public abstract class Observer: MonoBehaviour  {
 
-	public abstract void OnNotify();
-}
 
 public class DeadSceneBehaviour : Observer {
 

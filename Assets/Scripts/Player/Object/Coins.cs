@@ -14,14 +14,15 @@ public class Coins {
 	private const int VIDEO_GIFT = 5;
 
 	private int _count;
-	public int count {
-		get { return _count; }
-	}
+	public int count {get { return _count; }}
 
+	private DateTime _lastGift;
+	public DateTime lastGift { get { return _lastGift;} }
 
 	public Coins () {
 
 		_count = INITIAL_COUNT;
+		_lastGift = DateTime.Now;
 
 	}
 
@@ -48,6 +49,7 @@ public class Coins {
 	public void SetDailyGift () {
 
 		_count += DAILY_GIFT;
+		_lastGift = DateTime.Now;
 	}
 
 	/// <summary>

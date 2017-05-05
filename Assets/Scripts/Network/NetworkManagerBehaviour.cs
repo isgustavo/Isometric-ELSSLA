@@ -6,29 +6,29 @@ using UnityEngine.UI;
 
 public class NetworkManagerBehaviour : NetworkManager {
 
-	static bool client = false; 
-
 	private const int NETWORK_PORT = 7777;
-	public NetworkDiscoveryBehaviour discovery;
+	[SerializeField]
+	private NetworkDiscoveryBehaviour _discovery;
 
-	public void OnPlayAction () {
+	/// <summary>
+	/// This event going to start a host player, stop broadcast to find a server and starts other looking for clients.
+	/// </summary>
+	public override void OnStartHost () {
 		networkAddress = Network.player.ipAddress;
 		networkPort = NETWORK_PORT;
-		client = true;
-		StartHost ();
+
+		_discovery.StopBroadcast ();
+
+		_discovery.broadcastData = networkPort.ToString ();
+		_discovery.StartAsServer ();
 	}
-
-	public void OnJoinAction () {
-		networkAddress = this.discovery.GetAddress ();
-
-		StartClient ();
-	}
-
-	public override void OnStartHost () {
-		this.discovery.StopBroadcast ();
-
-		this.discovery.broadcastData = networkPort.ToString ();
-		this.discovery.StartAsServer ();
+		
+	/// <summary>
+	/// Starts the client using the server address by Network Discovery.
+	/// </summary>
+	public void StartClient() {
+		networkAddress = _discovery.serverAddress;
+		base.StartClient ();
 	}
 
 	public override void OnClientSceneChanged(NetworkConnection conn) {
@@ -38,26 +38,22 @@ public class NetworkManagerBehaviour : NetworkManager {
 	public override void OnClientConnect(NetworkConnection conn) {
 		//base.OnClientConnect(conn);
 	}
-		
+
+	/// <summary>
+	/// This method spawn each client joined on server.
+	/// </summary>
+	/// <param name="conn">Client connection</param>
+	/// <param name="playerControllerId">Player controller identifier.</param>
 	public override void OnServerAddPlayer (NetworkConnection conn, short playerControllerId) {
 		
 		foreach (GameObject prefab in spawnPrefabs) {
 			
-			//if (PlayerBehaviour.instance.GetShip () == prefab.transform.name) {
-				GameObject playerShip;
-				if (client) {
-					client = false;
-					playerShip = (GameObject)GameObject.Instantiate (prefab, new Vector3 (-2, 6, -6), Quaternion.identity);
-
-				} else {
-					playerShip = (GameObject)GameObject.Instantiate (prefab, new Vector3 (2, 6, -6), Quaternion.identity);
-				}
-
-				//playerShip.name = PlayerBehaviour.instance.GetName ();
+			//TODO: if (PlayerBehaviour.instance.GetShip () == prefab.transform.name) {
+				GameObject playerShip = (GameObject)GameObject.Instantiate (prefab, UtilBehaviour.GetRandomPosition (), Quaternion.identity);
+		
 				NetworkServer.AddPlayerForConnection (conn, playerShip, playerControllerId);
 				break;
-
-		//	}
+			//}
 		}
 	}
 

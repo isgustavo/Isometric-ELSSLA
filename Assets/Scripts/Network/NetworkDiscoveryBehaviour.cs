@@ -6,25 +6,28 @@ using UnityEngine.UI;
 
 public class NetworkDiscoveryBehaviour : NetworkDiscovery {
 
-	private string serverAddress;
-	public ObserverBehaviour observer;
+	private string _serverAddress;
+	public string serverAddress { get { return _serverAddress; }}
+	[SerializeField]
+	private Observer observer;
 
+	/// <summary>
+	/// Start this instance and start looking for a server.
+	/// </summary>
 	void Start () {
 		Initialize ();
 		StartAsClient ();
 	}
-
-
+		
+	/// <summary>
+	/// Receive broadcast for server found.
+	/// </summary>
+	/// <param name="fromAddress">Server address.</param>
+	/// <param name="data">Data.</param>
 	public override void OnReceivedBroadcast (string fromAddress, string data) {
 
-		//Network discovery component has found a server being broadcasted
-		this.serverAddress = fromAddress;
-		Debug.Log ("FOUNDED");
+		_serverAddress = fromAddress;
 		observer.OnNotify ();
 	}
 
-	public string GetAddress () {
-
-		return this.serverAddress;
-	}
 }
