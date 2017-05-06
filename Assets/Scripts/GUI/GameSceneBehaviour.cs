@@ -21,8 +21,8 @@ public class GameSceneBehaviour : MonoBehaviour {
 
 		_deadScene.SetActive (scored, isNewHighScore, name);
 
-		_joystickButton.SetActive (false);
-		_boostButton.SetActive (false);
+//		_joystickButton.SetActive (false);
+//		_boostButton.SetActive (false);
 		_scorePanel.gameObject.SetActive (false);
 	}
 
@@ -30,8 +30,8 @@ public class GameSceneBehaviour : MonoBehaviour {
 
 		_deadScene.gameObject.SetActive (false);
 
-		_joystickButton.SetActive (true);
-		_boostButton.SetActive (true);
+//		_joystickButton.SetActive (true);
+//		_boostButton.SetActive (true);
 
 		_scorePanel.SetActive (true);
 

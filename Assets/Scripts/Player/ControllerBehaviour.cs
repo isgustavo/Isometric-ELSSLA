@@ -48,8 +48,8 @@ public class ControllerBehaviour : NetworkBehaviour {
 		if (!isLocalPlayer || _isDead)
 			return;
 
-		if (RotationJoystickBehaviour.instance.IsDragging ()) {
-			gameObject.transform.rotation = Quaternion.AngleAxis (RotationJoystickBehaviour.instance.GetAngle (), Vector3.up);
+		if (RotationJoystickBehaviour.instance.isDragging) {
+			gameObject.transform.rotation = Quaternion.AngleAxis (RotationJoystickBehaviour.instance.angle, Vector3.up);
 
 			if (_timeTilNextShot < 0) {
 				_timeTilNextShot = _TIME_BETWEEN_SHOT;
@@ -67,7 +67,7 @@ public class ControllerBehaviour : NetworkBehaviour {
 		if (!isLocalPlayer || _isDead)
 			return;
 
-		if (BoostButtonBehaviour.instance.IsPressed ()) {
+		if (BoostButtonBehaviour.instance.pressed) {
 
 			if (!_boosted) {
 

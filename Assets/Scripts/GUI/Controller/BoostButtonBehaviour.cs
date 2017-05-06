@@ -8,9 +8,11 @@ public class BoostButtonBehaviour : MonoBehaviour, IPointerDownHandler, IPointer
 
 	public static BoostButtonBehaviour instance;
 
-	public Image button;
+	[SerializeField]
+	private Image _button;
 
-	private bool isPressed;
+	private bool _pressed;
+	public bool pressed { get { return _pressed; } }
 
 	void Awake() {
 
@@ -18,48 +20,45 @@ public class BoostButtonBehaviour : MonoBehaviour, IPointerDownHandler, IPointer
 		else if (instance != this) Destroy (gameObject);    
 	}
 
+	/// <summary>
+	/// Raises the pointer down event.
+	/// </summary>
+	/// <param name="eventData">Event data.</param>
 	public virtual void OnPointerDown(PointerEventData eventData) {
 
 		StopAllCoroutines ();
-		StartCoroutine (FadeTo (0f/255f, .1f, button));
+		StartCoroutine (FadeTo (0f/255f, .1f, _button));
 
-		isPressed = true;
+		_pressed = true;
 	}
 
+	/// <summary>
+	/// Raises the pointer up event.
+	/// </summary>
+	/// <param name="eventData">Event data.</param>
 	public virtual void OnPointerUp(PointerEventData eventData) {
 
-		StartCoroutine (FadeTo (95f/255f, .5f, button));
+		StopAllCoroutines ();
+		StartCoroutine (FadeTo (95f/255f, .5f, _button));
 
-		isPressed = false;
+		_pressed = false;
 	}
 
-	IEnumerator FadeTo(float aValue, float aTime, Image i) {
+	/// <summary>
+	/// Coroutine to change the image's alpha value. 
+	/// </summary>
+	/// <param name="value">alpha value.</param>
+	/// <param name="time">Effect duration</param>
+	/// <param name="i">Image target.</param>
+	IEnumerator FadeTo(float value, float time, Image i) {
 
 		float alpha = i.color.a;
-		for (float t = 0.0f; t < 1.0f; t += Time.deltaTime / aTime) {
+		for (float t = 0.0f; t < 1.0f; t += Time.deltaTime / time) {
 
-			Color newColor = new Color(i.color.r, i.color.g, i.color.b, Mathf.Lerp(alpha,aValue,t));
+			Color newColor = new Color(i.color.r, i.color.g, i.color.b, Mathf.Lerp(alpha, value,t));
 			i.color = newColor;
 			yield return null;
 		}
-	}
-
-	public void SetActive (bool value) {
-
-		gameObject.SetActive (value);
-
-		if (value) {
-
-			StartCoroutine (FadeTo (95f/255f, .1f, button));
-		} else {
-
-			isPressed = false;
-		}
-	}
-
-	public bool IsPressed () {
-
-		return isPressed;
 	}
 
 }
