@@ -44,6 +44,7 @@ public class Player {
 	/// <param name="coins">Coins.</param>
 	public Player (Coins coins) {
 
+		_id = "player" + UnityEngine.Random.Range (111, 999);
 		_coins = coins;
 	}
 		

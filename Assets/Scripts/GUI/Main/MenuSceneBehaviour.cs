@@ -68,7 +68,7 @@ public class MenuSceneBehaviour : Observer {
 		while(true) {
 			TimeSpan time = next.Subtract (DateTime.Now);
 
-			if (time.Hours == 0 && time.Minutes == 0) {
+			if (time.Hours <= 0 && time.Minutes <= 0) {
 				_timeLeftText.text = "Get Coin!";
 				_giftAnimation.Play ();
 				_giftAvailable = true;

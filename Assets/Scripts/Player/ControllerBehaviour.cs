@@ -92,6 +92,9 @@ public class ControllerBehaviour : NetworkBehaviour {
 	public override void OnStartLocalPlayer () {
 		base.OnStartServer ();
 
+		GameObject.FindGameObjectWithTag ("MainCamera").GetComponent<GameCameraBehaviour> ().SetTarget (transform);
+
+
 		//TODO maybe instanciate GameSceneBehaviour here
 		GameObject obj = GameObject.FindGameObjectWithTag ("GameScene");
 		if (obj != null) {
