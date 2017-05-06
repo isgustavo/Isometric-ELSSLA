@@ -3,7 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ScoreBehaviour : MonoBehaviour {
+public abstract class ScoreObserver : MonoBehaviour {
+
+	public abstract void OnNotify (int value);
+}
+	
+public class ScoreBehaviour : ScoreObserver {
 
 	private const int INITIAL_SCORE = -1;
 
@@ -12,31 +17,41 @@ public class ScoreBehaviour : MonoBehaviour {
 	[SerializeField]
 	private GameObject _newHighScoreContent;
 
-	private int lastScore = INITIAL_SCORE;
+	private int _current_score;
+	private int _lastScore;
+	private int _highScore;
 
-	public int _score { get; set; }
+	/// <summary>
+	/// Init the specified score display.
+	/// </summary>
+	public void Init () {
+
+		_lastScore = INITIAL_SCORE;
+		_highScore = PlayerBehaviour.instance.localPlayer._highScore;
+		_newHighScoreContent.SetActive (false);
+	}
 
 	void Update () {
 
-		if (_score >= lastScore) {
+		if (_current_score >= _lastScore) {
+			//Score display "animation"
+			_lastScore += Mathf.CeilToInt ((_current_score - _lastScore) * .1f);
+			_scoreText.text = _lastScore.ToString ("000000000");
 
-			lastScore += Mathf.CeilToInt ((_score - lastScore) * .1f);
-			_scoreText.text = lastScore.ToString ("000000000");
-		
 		}
 	}
 
-	public void SetActive (bool value) {
-		gameObject.SetActive (value);
+	/// <summary>
+	/// Raises the notify event. Observer to know when the player has scored
+	/// </summary>
+	/// <param name="value">New Score</param>
+	public override void OnNotify (int value) {
 
-		lastScore = INITIAL_SCORE;
-		_score = 0;
-		NewHighScore (!value);
-	}
-		
-	public void NewHighScore (bool value) {
+		_current_score = value;
 
-		_newHighScoreContent.SetActive (value);
+		if (_current_score > _highScore) {
+			_newHighScoreContent.SetActive (true);
+		}
 	}
 
 }

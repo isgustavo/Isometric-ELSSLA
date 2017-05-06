@@ -45,6 +45,7 @@ public class Player {
 	public Player (Coins coins) {
 
 		_id = "player" + UnityEngine.Random.Range (111, 999);
+		_highScore = 0;
 		_coins = coins;
 	}
 		

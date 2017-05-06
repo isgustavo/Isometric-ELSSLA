@@ -15,7 +15,6 @@ public class ControllerBehaviour : NetworkBehaviour {
 
 	[SyncVar (hook="OnScoreChange")]
 	public int _score = _INITIAL_SCORE;
-	private bool _isNewHighScore = false;
 	private bool _isDead = false;
 
 	[SerializeField]
@@ -33,9 +32,11 @@ public class ControllerBehaviour : NetworkBehaviour {
 	[SerializeField]
 	private Rigidbody _rb;
 
+	private ScoreObserver _scoreObserver;
+
 	//Just on server
 	private BulletSpawnManagerBehaviour _spawnManager;
-	private GameSceneBehaviour _gameSceneManager;
+
 
 	void Start () {
 
@@ -95,12 +96,10 @@ public class ControllerBehaviour : NetworkBehaviour {
 		GameObject.FindGameObjectWithTag ("MainCamera").GetComponent<GameCameraBehaviour> ().SetTarget (transform);
 
 
-		//TODO maybe instanciate GameSceneBehaviour here
 		GameObject obj = GameObject.FindGameObjectWithTag ("GameScene");
 		if (obj != null) {
 
-			_gameSceneManager = obj.GetComponent<GameSceneBehaviour> ();
-			_gameSceneManager._delegate += new RespawnDelegate (this.Respawn);
+			_scoreObserver = obj.GetComponentInChildren<ScoreObserver> ();
 		}
 	}
 
@@ -146,9 +145,7 @@ public class ControllerBehaviour : NetworkBehaviour {
 
 	/// <summary>
 	/// Hook method to change score value.
-	/// Being a local player this hook going to verify and change _isNewHighScore 
-	/// variable if new score is bigger than last high score and set _score and
-	/// _isNewHighScore to game scene manager.
+	/// Being a local player this hook going notify score display observer
 	/// </summary>
 	public void OnScoreChange (int value) {
 
@@ -156,13 +153,7 @@ public class ControllerBehaviour : NetworkBehaviour {
 
 		if (isLocalPlayer) {
 
-			if (value > PlayerBehaviour.instance.localPlayer._highScore) {
-				_isNewHighScore = true;
-			} else {
-				_isNewHighScore = false;
-			}
-
-			_gameSceneManager.SetScore(_score, _isNewHighScore);
+			_scoreObserver.OnNotify (_score);
 		}
 			
 	}
@@ -191,12 +182,12 @@ public class ControllerBehaviour : NetworkBehaviour {
 		_rocket.Stop ();
 		_exlosion.Play ();
 
-		if (_isNewHighScore) {
+		//if (_isNewHighScore) {
 
-			PlayerBehaviour.instance.SaveNewHighScore (_score);
-		}
+		//	PlayerBehaviour.instance.SaveNewHighScore (_score);
+		//}
 
-		_gameSceneManager.Dead(_score, _isNewHighScore, name);
+		//_gameSceneManager.Dead(_score, _isNewHighScore, name);
 
 	}
 

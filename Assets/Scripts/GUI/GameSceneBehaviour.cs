@@ -17,6 +17,26 @@ public class GameSceneBehaviour : MonoBehaviour {
 
 	public event RespawnDelegate _delegate;
 
+
+	void Start () {
+		Init ();
+	}
+
+
+	void Init () {
+		_joystickButton.gameObject.SetActive (true);
+		_joystickButton.OnPointerUp (null);
+
+		_boostButton.gameObject.SetActive (true);
+		_boostButton.OnPointerUp (null);
+
+		_scorePanel.gameObject.SetActive (true);
+		_scorePanel.Init ();
+
+		_deadScene.gameObject.SetActive (false);
+	}
+
+
 	public void Dead (int scored, bool isNewHighScore, string name) {
 
 		_deadScene.SetActive (scored, isNewHighScore, name);
@@ -33,15 +53,15 @@ public class GameSceneBehaviour : MonoBehaviour {
 //		_joystickButton.SetActive (true);
 //		_boostButton.SetActive (true);
 
-		_scorePanel.SetActive (true);
+//		_scorePanel.SetActive (true);
 
 		_delegate ();
 	}
 
 	public void SetScore (int score, bool isNewHighScore) {
 
-		_scorePanel._score = score;
-		_scorePanel.NewHighScore (isNewHighScore);
+//		_scorePanel._score = score;
+//		_scorePanel.NewHighScore (isNewHighScore);
 	}
 
 

@@ -43,8 +43,8 @@ public class DeadSceneBehaviour : Observer {
 	public void SetActive (int scored, bool isNewHighScore, string name) {
 
 		//_coinText.text = PlayerBehaviour.instance.player.coins.count.ToString ();
-		_newHighScoreContent._score = scored;
-		_newHighScoreContent.NewHighScore (isNewHighScore);
+//		_newHighScoreContent._score = scored;
+//		_newHighScoreContent.NewHighScore (isNewHighScore);
 
 		if (!name.Equals ("")) {
 			_nameText.text = name;
