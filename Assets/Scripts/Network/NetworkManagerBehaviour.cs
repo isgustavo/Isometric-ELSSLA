@@ -26,7 +26,7 @@ public class NetworkManagerBehaviour : NetworkManager {
 	/// <summary>
 	/// Starts the client using the server address by Network Discovery.
 	/// </summary>
-	public void StartClient() {
+	public void StartClientPlayer() {
 		networkAddress = _discovery.serverAddress;
 		base.StartClient ();
 	}

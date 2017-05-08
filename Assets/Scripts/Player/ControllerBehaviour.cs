@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
+using Facebook.Unity;
 
 public abstract class RespawnObserver: NetworkBehaviour  {
 
@@ -61,7 +62,11 @@ public class ControllerBehaviour : RespawnObserver {
 			if (_timeTilNextShot < 0) {
 				_timeTilNextShot = _TIME_BETWEEN_SHOT;
 
-				CmdFire(bulletPoint.position, bulletPoint.rotation, PlayerBehaviour.instance.localPlayer._id, PlayerBehaviour.instance.localPlayer._name);
+				if (PlayerBehaviour.instance.localPlayer._logged) {
+					CmdFire (bulletPoint.position, bulletPoint.rotation, PlayerBehaviour.instance.localPlayer._id, PlayerBehaviour.instance.localPlayer._name);
+				} else {
+					CmdFire (bulletPoint.position, bulletPoint.rotation, PlayerBehaviour.instance.localPlayer._id, "");
+				}
 			}
 		}
 
@@ -176,20 +181,23 @@ public class ControllerBehaviour : RespawnObserver {
 	/// </summary>
 	void OnCollisionEnter(Collision collision) { 
 
-		string name = "";
-		BulletBehaviour bullet = collision.gameObject.GetComponent<BulletBehaviour> ();
-		if (bullet != null) {
-
-			PlayerBehaviour.instance.SaveNewKD (bullet.id);
-			name = bullet.playerName;
-		}
-
 		_isDead = true;
 		_mesh.SetActive (false);
 
 		_rocket.Stop ();
 		_exlosion.Play ();
 
+		if (!isLocalPlayer)
+			return;
+		
+		string name = "";
+		BulletBehaviour bullet = collision.gameObject.GetComponent<BulletBehaviour> ();
+		if (bullet != null && bullet.playerName != "") {
+
+			PlayerBehaviour.instance.SaveNewKD (bullet.id);
+			name = bullet.playerName;
+		}
+			
 		PlayerBehaviour.instance.SaveNewHighScore (_score);
 		_deadObserver.OnNotify (_score, name);
 
@@ -199,13 +207,20 @@ public class ControllerBehaviour : RespawnObserver {
 	/// Respawn notify
 	/// </summary>
 	public override void OnNotify () {
-		Respawn ();
+		CmdRespawn ();
 	}
 
 	/// <summary>
 	/// Method to set player with initial status.
 	/// </summary>
-	void Respawn () {
+	[Command]
+	void CmdRespawn () {
+		RpcRespawn ();
+
+	}
+
+	[ClientRpc]
+	void RpcRespawn () {
 
 		_score = _INITIAL_SCORE;
 		_mesh.SetActive (true);

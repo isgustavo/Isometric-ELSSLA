@@ -22,6 +22,8 @@ public class Player {
 	//Facebook id from Facebook Api
 	public string _id { get; }
 
+	public bool _logged { get; }
+
 	//Facebook name from Facebook Api
 	public string _name { get; }
 
@@ -45,6 +47,7 @@ public class Player {
 	public Player (Coins coins) {
 
 		_id = "player" + UnityEngine.Random.Range (111, 999);
+		_logged = false;
 		_highScore = 0;
 		_coins = coins;
 	}
@@ -53,6 +56,7 @@ public class Player {
 
 		_id = id;
 		_name = name;
+		_logged = true;
 
 		FB.API ("/"+_id+"/picture?type=square&height=128&width=128", HttpMethod.GET, ProfilePicCallBack);
 	}

@@ -111,7 +111,7 @@ public class MenuSceneBehaviour : SetupObserver {
 	public void JoinPlayAction () {
 
 		SetLoading ();
-		GameObject.FindGameObjectWithTag ("NetworkManager").GetComponent<NetworkManagerBehaviour> ().StartClient ();
+		GameObject.FindGameObjectWithTag ("NetworkManager").GetComponent<NetworkManagerBehaviour> ().StartClientPlayer ();
 	}
 
 	/// <summary>

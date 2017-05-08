@@ -48,7 +48,7 @@ public class AsteroidSpawnManagerBehaviour : NetworkBehaviour {
 		if (_timeTilNextAsteroid < 0) {
 			_timeTilNextAsteroid = TIME_BETWEEN_ASTEROID;
 
-			ReSpawnFromPool ();
+			RespawnFromPool ();
 		}
 
 		_timeTilNextAsteroid -= Time.deltaTime;
@@ -58,7 +58,7 @@ public class AsteroidSpawnManagerBehaviour : NetworkBehaviour {
 	/// <summary>
 	/// Method to respawn asteroid from pool.
 	/// </summary>
-	void ReSpawnFromPool() {
+	void RespawnFromPool () {
 
 		foreach (GameObject obj in _pool) {
 			if (!obj.activeInHierarchy) {
