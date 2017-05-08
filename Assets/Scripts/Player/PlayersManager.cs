@@ -27,7 +27,11 @@ public class PlayersManager : NetworkBehaviour {
 	/// Method to add a new player. This method must be call on server-side context
 	/// </summary>
 	public void AddPlayer (string playerId, ControllerBehaviour player) {
-		players.Add (playerId, player);
+		if (players.ContainsKey (playerId)) {
+			players [playerId] = player;
+		} else {
+			players.Add (playerId, player);
+		}
 
 	}
 

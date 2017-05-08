@@ -17,13 +17,17 @@ public class PlayerBehaviour : MonoBehaviour {
 	private Player _localPlayer;
 	public Player localPlayer { get { return _localPlayer; }}
 	private List<Player> _facebookPlayers;
+	public List<Player> facebookPlayers { get { return _facebookPlayers; }}
 
 	//Firebase database object
 	private DatabaseReference _reference; 
 
 	//GUI observer
 	[SerializeField]
-	private Observer _observer;
+	private SetupObserver _observer;
+
+	private UpdateObserver _facebookPlayersObserver;
+	public UpdateObserver facebookPlayersObserver { set { _facebookPlayersObserver = value;} }
 
 	void Awake () {
 		
@@ -112,7 +116,7 @@ public class PlayerBehaviour : MonoBehaviour {
 	/// <summary>
 	/// Facebook login request. See AuthCallBack callback.
 	/// </summary>
-	public void LogInAction () {
+	public void Login () {
 
 		List<string> permissions = new List<string> ();
 		permissions.Add ("public_profile");
@@ -120,6 +124,15 @@ public class PlayerBehaviour : MonoBehaviour {
 		FB.LogInWithReadPermissions (permissions, AuthCallback);
 
 	}
+
+	/// <summary>
+	/// Updates the score and KD.
+	/// </summary>
+	public void UpdateScoreAndKD () {
+
+		FB.API ("/app/scores?fields=score,user.limit(30)", HttpMethod.GET, ScoreAndKDCallback);
+	}
+
 
 	/// <summary>
 	/// Facebook auths callback. If after callback the player be logged in to Facebook will call PlayerInfoCallback callback.
@@ -172,7 +185,23 @@ public class PlayerBehaviour : MonoBehaviour {
 			Coins coins = _localPlayer._coins;
 			coins.SetFacebookGift ();
 
-			_localPlayer = new Player (id, name, Int32.Parse (highScore), coins);
+			//Verify after login if player already has a highscore, if YES, keep the higherst score 
+			int highscore = Int32.Parse (highScore);
+			if (_localPlayer._highScore > highscore) {
+				SaveNewHighScore (_localPlayer._highScore);
+				_localPlayer = new Player (id, name, _localPlayer._highScore, coins);
+			} else {
+				_localPlayer = new Player (id, name, highscore, coins);
+			}
+
+			//Notifies the server that the player has changed id
+			foreach (GameObject obj in GameObject.FindGameObjectsWithTag("Player")) {
+				ControllerBehaviour player = obj.GetComponent<ControllerBehaviour> ();
+				if (player.isLocalPlayer) {
+					player.ChangedId ();
+					break;
+				}
+			}
 
 			FB.API ("/app/scores?fields=score,user.limit(30)", HttpMethod.GET, ScoreAndKDCallback);
 		} 
@@ -225,10 +254,10 @@ public class PlayerBehaviour : MonoBehaviour {
 					_facebookPlayers.Add (player);
 
 				}
-				//Debug.Log ("OnNotify");
-				//_observer.OnNotify();
+				_facebookPlayersObserver.OnNotify();
 			}
 		});
+			
 	}
 
 
@@ -237,6 +266,10 @@ public class PlayerBehaviour : MonoBehaviour {
 	/// </summary>
 	/// <param name="value">High score value</param>
 	public void SaveNewHighScore (int value) {
+
+		if (_localPlayer._highScore > value) {
+			return;
+		}
 
 		_localPlayer._highScore = value;
 

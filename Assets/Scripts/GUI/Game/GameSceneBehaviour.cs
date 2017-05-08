@@ -1,10 +1,16 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 
 public delegate void RespawnDelegate ();
 
-public class GameSceneBehaviour : MonoBehaviour {
+public abstract class DeadObserver : MonoBehaviour {
+
+	public abstract void OnNotify (int score, string name);
+}
+
+public class GameSceneBehaviour : DeadObserver {
 
 	[SerializeField]
 	private RotationJoystickBehaviour _joystickButton;
@@ -15,7 +21,7 @@ public class GameSceneBehaviour : MonoBehaviour {
 	[SerializeField]
 	private DeadSceneBehaviour _deadScene;
 
-	public event RespawnDelegate _delegate;
+	public RespawnObserver _observer { get; set;}
 
 
 	void Start () {
@@ -37,32 +43,30 @@ public class GameSceneBehaviour : MonoBehaviour {
 	}
 
 
-	public void Dead (int scored, bool isNewHighScore, string name) {
+	/// <summary>
+	/// Raises the notify event.
+	/// </summary>
+	/// <param name="score">Score.</param>
+	/// <param name="name">Name.</param>
+	public override void OnNotify (int score, string name) {
 
-		_deadScene.SetActive (scored, isNewHighScore, name);
-
-//		_joystickButton.SetActive (false);
-//		_boostButton.SetActive (false);
+		_joystickButton.gameObject.SetActive (false);
+		_boostButton.gameObject.SetActive (false);
 		_scorePanel.gameObject.SetActive (false);
+
+		_deadScene.SetActive (score, name);
+		
 	}
+		
+	/// <summary>
+	/// Respawns the action.
+	/// </summary>
+	public void RespawnAction () {
 
-	public void Respawn () {
+		Init ();
+		_observer.OnNotify ();
 
-		_deadScene.gameObject.SetActive (false);
-
-//		_joystickButton.SetActive (true);
-//		_boostButton.SetActive (true);
-
-//		_scorePanel.SetActive (true);
-
-		_delegate ();
 	}
-
-	public void SetScore (int score, bool isNewHighScore) {
-
-//		_scorePanel._score = score;
-//		_scorePanel.NewHighScore (isNewHighScore);
-	}
-
+		
 
 }

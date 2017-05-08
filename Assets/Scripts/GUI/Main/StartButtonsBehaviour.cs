@@ -3,8 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+public abstract class ServerObserver : MonoBehaviour {
 
-public class StartButtonsBehaviour : Observer {
+	public abstract void OnNotify ();
+}
+
+public class StartButtonsBehaviour : ServerObserver {
 
 	public Button _playButton;
 	public Button _joinButton;

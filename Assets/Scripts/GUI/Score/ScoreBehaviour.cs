@@ -31,6 +31,20 @@ public class ScoreBehaviour : ScoreObserver {
 		_newHighScoreContent.SetActive (false);
 	}
 
+	public void InitWithScore (int score) {
+		
+		_lastScore = INITIAL_SCORE;
+		_current_score = score;
+		_highScore = PlayerBehaviour.instance.localPlayer._highScore;
+
+		if (_current_score >= _highScore) {
+			_newHighScoreContent.SetActive (true);
+		} else {
+			_newHighScoreContent.SetActive (false);
+		}
+
+	}
+
 	void Update () {
 
 		if (_current_score >= _lastScore) {
@@ -52,6 +66,7 @@ public class ScoreBehaviour : ScoreObserver {
 		if (_current_score > _highScore) {
 			_newHighScoreContent.SetActive (true);
 		}
+
 	}
 
 }

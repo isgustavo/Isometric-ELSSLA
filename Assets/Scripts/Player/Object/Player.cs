@@ -6,8 +6,8 @@ using Facebook.Unity;
 
 public class KD {
 
-	private int _k { get; }
-	private int _d { get; }
+	public int _k { get; }
+	public int _d { get; }
 
 	public KD (int k, int d) {
 		_k = k;

@@ -3,8 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
+public abstract class RespawnObserver: NetworkBehaviour  {
+
+	public abstract void OnNotify ();
+}
+
 [RequireComponent(typeof(Rigidbody))]
-public class ControllerBehaviour : NetworkBehaviour {
+public class ControllerBehaviour : RespawnObserver {
 
 	private const int _INITIAL_SCORE = 0;
 	private const int _SPEED = 10;
@@ -33,6 +38,7 @@ public class ControllerBehaviour : NetworkBehaviour {
 	private Rigidbody _rb;
 
 	private ScoreObserver _scoreObserver;
+	private DeadObserver _deadObserver;
 
 	//Just on server
 	private BulletSpawnManagerBehaviour _spawnManager;
@@ -100,6 +106,8 @@ public class ControllerBehaviour : NetworkBehaviour {
 		if (obj != null) {
 
 			_scoreObserver = obj.GetComponentInChildren<ScoreObserver> ();
+			_deadObserver = obj.GetComponent<DeadObserver> ();
+			obj.GetComponent<GameSceneBehaviour> ()._observer = this;
 		}
 	}
 
@@ -182,19 +190,22 @@ public class ControllerBehaviour : NetworkBehaviour {
 		_rocket.Stop ();
 		_exlosion.Play ();
 
-		//if (_isNewHighScore) {
+		PlayerBehaviour.instance.SaveNewHighScore (_score);
+		_deadObserver.OnNotify (_score, name);
 
-		//	PlayerBehaviour.instance.SaveNewHighScore (_score);
-		//}
+	}
 
-		//_gameSceneManager.Dead(_score, _isNewHighScore, name);
-
+	/// <summary>
+	/// Respawn notify
+	/// </summary>
+	public override void OnNotify () {
+		Respawn ();
 	}
 
 	/// <summary>
 	/// Method to set player with initial status.
 	/// </summary>
-	public void Respawn () {
+	void Respawn () {
 
 		_score = _INITIAL_SCORE;
 		_mesh.SetActive (true);
@@ -204,5 +215,27 @@ public class ControllerBehaviour : NetworkBehaviour {
 		_isDead = false;
 	}
 
+
+	/// <summary>
+	/// Changeds the identifier.
+	/// </summary>
+	public void ChangedId () {
+
+		string newId = PlayerBehaviour.instance.localPlayer._id;
+		gameObject.transform.name = newId;
+
+		CmdChangedId (newId);
+	}
+
+
+	/// <summary>
+	/// Server-side method to notify Id changes.
+	/// </summary>
+	/// <param name="id">New player Id.</param>
+	[Command]
+	public void CmdChangedId (string id) {
+
+		PlayersManager.instance.AddPlayer (id, this);
+	}
 
 }

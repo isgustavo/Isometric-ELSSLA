@@ -9,7 +9,7 @@ public class NetworkDiscoveryBehaviour : NetworkDiscovery {
 	private string _serverAddress;
 	public string serverAddress { get { return _serverAddress; }}
 	[SerializeField]
-	private Observer observer;
+	private ServerObserver observer;
 
 	/// <summary>
 	/// Start this instance and start looking for a server.

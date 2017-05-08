@@ -6,12 +6,12 @@ using System;
 using System.Globalization;
 using Facebook.Unity;
 
-public abstract class Observer: MonoBehaviour  {
+public abstract class SetupObserver: MonoBehaviour  {
 
 	public abstract void OnNotify();
 }
 
-public class MenuSceneBehaviour : Observer {
+public class MenuSceneBehaviour : SetupObserver {
 	
 
 	[SerializeField]
