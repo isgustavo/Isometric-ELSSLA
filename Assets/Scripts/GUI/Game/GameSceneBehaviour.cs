@@ -20,6 +20,8 @@ public class GameSceneBehaviour : DeadObserver {
 	private ScoreBehaviour _scorePanel;
 	[SerializeField]
 	private DeadSceneBehaviour _deadScene;
+	[SerializeField]
+	private WarningBehaviour _warningContent;
 
 	public RespawnObserver _observer { get; set;}
 
@@ -40,11 +42,12 @@ public class GameSceneBehaviour : DeadObserver {
 		_scorePanel.Init ();
 
 		_deadScene.gameObject.SetActive (false);
+
 	}
 
 
 	/// <summary>
-	/// Raises the notify event.
+	/// Dead Observer.
 	/// </summary>
 	/// <param name="score">Score.</param>
 	/// <param name="name">Name.</param>
@@ -53,6 +56,7 @@ public class GameSceneBehaviour : DeadObserver {
 		_joystickButton.gameObject.SetActive (false);
 		_boostButton.gameObject.SetActive (false);
 		_scorePanel.gameObject.SetActive (false);
+		_warningContent.gameObject.SetActive (false);
 
 		_deadScene.SetActive (score, name);
 		

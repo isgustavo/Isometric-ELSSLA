@@ -50,6 +50,7 @@ public class NetworkManagerBehaviour : NetworkManager {
 			
 			//TODO: if (PlayerBehaviour.instance.GetShip () == prefab.transform.name) {
 				GameObject playerShip = (GameObject)GameObject.Instantiate (prefab, UtilBehaviour.GetRandomPosition (), Quaternion.identity);
+				//GameObject playerShip = (GameObject)GameObject.Instantiate (prefab, new Vector3(0,6,0), Quaternion.identity);
 		
 				NetworkServer.AddPlayerForConnection (conn, playerShip, playerControllerId);
 				break;

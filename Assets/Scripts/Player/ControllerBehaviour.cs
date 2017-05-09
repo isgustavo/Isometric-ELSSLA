@@ -39,6 +39,7 @@ public class ControllerBehaviour : RespawnObserver {
 	private Rigidbody _rb;
 
 	private ScoreObserver _scoreObserver;
+	private OutOfCombatAreaObserver _outOfCombatAreaObserver;
 	private DeadObserver _deadObserver;
 
 	//Just on server
@@ -95,6 +96,14 @@ public class ControllerBehaviour : RespawnObserver {
 
 			_boosted = false;
 		}
+			
+		if (UtilBehaviour.IsOutOfWorld (_rb.position)) {
+
+			_outOfCombatAreaObserver.OnNotify (true);
+		} else {
+
+			_outOfCombatAreaObserver.OnNotify (false);
+		}
 	}
 
 
@@ -106,12 +115,17 @@ public class ControllerBehaviour : RespawnObserver {
 
 		GameObject.FindGameObjectWithTag ("MainCamera").GetComponent<GameCameraBehaviour> ().SetTarget (transform);
 
-
 		GameObject obj = GameObject.FindGameObjectWithTag ("GameScene");
 		if (obj != null) {
 
 			_scoreObserver = obj.GetComponentInChildren<ScoreObserver> ();
+
+			WarningBehaviour wb = obj.GetComponentInChildren<WarningBehaviour> ();
+			wb._delegate = OnCollisionEnter;
+			_outOfCombatAreaObserver = wb;
+
 			_deadObserver = obj.GetComponent<DeadObserver> ();
+
 			obj.GetComponent<GameSceneBehaviour> ()._observer = this;
 		}
 	}
@@ -191,11 +205,15 @@ public class ControllerBehaviour : RespawnObserver {
 			return;
 		
 		string name = "";
-		BulletBehaviour bullet = collision.gameObject.GetComponent<BulletBehaviour> ();
-		if (bullet != null && bullet.playerName != "") {
+		if (collision != null) {
+			BulletBehaviour bullet = collision.gameObject.GetComponent<BulletBehaviour> ();
+			if (bullet != null && bullet.playerName != "") {
 
-			PlayerBehaviour.instance.SaveNewKD (bullet.id);
-			name = bullet.playerName;
+				PlayerBehaviour.instance.SaveNewKD (bullet.id);
+				name = bullet.playerName;
+			}
+		} else {
+			name = "Programmer";
 		}
 			
 		PlayerBehaviour.instance.SaveNewHighScore (_score);
