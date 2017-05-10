@@ -5,6 +5,8 @@ using UnityEngine.Networking;
 
 public class FragmentSpawnManagerBehaviour : MonoBehaviour {
 
+	private const int FRAGMENT_VELOCITY = 5;
+
 	//random possibility to spawn fragent with 2 or 3 parts
 	private const int _RANGE_FROM = 0;
 	private const int _RANGE_TO = 10;
@@ -63,6 +65,7 @@ public class FragmentSpawnManagerBehaviour : MonoBehaviour {
 	}
 
 
+
 	/// <summary>
 	/// Method to get fragment from pool or create a new fragment if anyone available.
 	/// </summary>
@@ -76,6 +79,10 @@ public class FragmentSpawnManagerBehaviour : MonoBehaviour {
 		foreach (GameObject obj in objects) {
 			if (!obj.activeInHierarchy) {
 				obj.transform.position = position;
+				obj.transform.GetComponent<Rigidbody>().velocity = new Vector3 (
+					Random.Range(-FRAGMENT_VELOCITY, FRAGMENT_VELOCITY) * 0.5f, 
+					0f, 
+					Random.Range(-FRAGMENT_VELOCITY, FRAGMENT_VELOCITY) * 0.5f);
 				obj.SetActive (true);
 				return obj;
 			}
@@ -85,6 +92,11 @@ public class FragmentSpawnManagerBehaviour : MonoBehaviour {
 		GameObject newObject = (GameObject) Instantiate (prefab, position, rotation);
 		newObject.name = "FragmentPoolObject" + objects.Count;
 		newObject.SetActive(true);
+		newObject.transform.GetComponent<Rigidbody>().velocity = new Vector3 (
+			Random.Range(-FRAGMENT_VELOCITY, FRAGMENT_VELOCITY) * 0.5f, 
+			0f, 
+			Random.Range(-FRAGMENT_VELOCITY, FRAGMENT_VELOCITY) * 0.5f);
+		
 		newObject.transform.parent = this.gameObject.transform;
 
 		objects.Add (newObject);

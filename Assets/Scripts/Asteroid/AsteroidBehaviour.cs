@@ -10,7 +10,6 @@ public class AsteroidBehaviour : NetworkBehaviour, Destructible {
 	[SerializeField]
 	private ParticleSystem _explosion;
 
-
 	public event SpawnFragmentDelegate _delegate;
 
 	/// <summary>
