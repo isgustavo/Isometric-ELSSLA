@@ -73,4 +73,9 @@ public class GameSceneBehaviour : DeadObserver {
 	}
 		
 
+	public void BactToMainMenu () {
+
+		NetworkManager.singleton.client.Disconnect ();
+	}
+
 }

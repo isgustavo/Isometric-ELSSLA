@@ -17,7 +17,8 @@ public class ScoreboardCellBehaviour : MonoBehaviour {
 	private Text _dText;
 	[SerializeField]
 	private Text _highScoreText;
-
+	[SerializeField]
+	private Animation _animation;
 
 	/// <summary>
 	/// Sets the scoreboard cell values.
@@ -41,7 +42,14 @@ public class ScoreboardCellBehaviour : MonoBehaviour {
 			
 		_highScoreText.text = highScore.ToString ();
 
+	}
 
+	/// <summary>
+	/// Starts the animation.
+	/// </summary>
+	public void StartAnimation () {
+
+		_animation.Play ();
 	}
 
 

@@ -15,6 +15,8 @@ public class WarningBehaviour : OutOfCombatAreaObserver {
 
 	[SerializeField]
 	private Text _countDownText;
+	[SerializeField]
+	private Animation _animation;
 
 	public delegate void DeadOutOfCombatArea(Collision collision);
 	public DeadOutOfCombatArea _delegate { get; set; }
@@ -22,18 +24,22 @@ public class WarningBehaviour : OutOfCombatAreaObserver {
 	void OnEnable () {
 
 		_timeOut = _TIME_OUT_TOLERANCE;
+	
+		InvokeRepeating ("UpdateTimer", 0f, 1f);
+
 	}
 
+	void UpdateTimer () {
 
-	void Update () {
-
-		if (_timeOut < 0) {
+		if (_timeOut <= 0) {
 			_delegate (null);
+			CancelInvoke ("UpdateTimer");
 		}
-		_timeOut -= Time.deltaTime;
+		_timeOut -= 1;
 		_countDownText.text = _timeOut.ToString ("0");
-	}
+		_animation.Play ();
 
+	}
 
 	/// <summary>
 	/// Out of combat area observer

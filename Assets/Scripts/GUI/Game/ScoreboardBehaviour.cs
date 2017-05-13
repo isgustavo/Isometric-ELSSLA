@@ -62,7 +62,7 @@ public class ScoreboardBehaviour : UpdateObserver {
 		} else {
 
 			_loadingContent.SetActive (false);
-			_scoreboardContent.SetActive (false);
+			_scoreboardContent.SetActive (true);
 			_facebookInviteContent.SetActive (false);
 			_facebookConnectContent.SetActive (true);
 		}
@@ -102,6 +102,7 @@ public class ScoreboardBehaviour : UpdateObserver {
 			Player p = PlayerBehaviour.instance.facebookPlayers [i];
 			ScoreboardCellBehaviour cell = obj.GetComponent<ScoreboardCellBehaviour> ();
 			cell.SetValues (i + 1, p._picture, p._name, p._kd, p._highScore);
+			cell.StartAnimation ();
 
 		}
 
