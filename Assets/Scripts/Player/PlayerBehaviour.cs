@@ -356,16 +356,17 @@ public class PlayerBehaviour : MonoBehaviour {
 	/// </summary>
 	/// <returns>Coins loaded.</returns>
 	Coins LoadCoins() {
+		//File.Delete (Application.persistentDataPath + "/Coins.dat");
 		Coins coins;
 		BinaryFormatter bf = new BinaryFormatter ();
 		FileStream file;
-		if (File.Exists (Application.persistentDataPath + "/Coins4.dat")) {
-			file = File.Open (Application.persistentDataPath + "/Coins4.dat", FileMode.Open);
+		if (File.Exists (Application.persistentDataPath + "/Coins.dat")) {
+			file = File.Open (Application.persistentDataPath + "/Coins.dat", FileMode.Open);
 			coins = (Coins) bf.Deserialize (file);
 
 			file.Close ();
 		} else {
-			file = File.Create (Application.persistentDataPath + "/Coins4.dat");
+			file = File.Create (Application.persistentDataPath + "/Coins.dat");
 
 			coins = new Coins ();
 			bf.Serialize (file, coins);
@@ -384,14 +385,22 @@ public class PlayerBehaviour : MonoBehaviour {
 
 		BinaryFormatter bf = new BinaryFormatter ();
 		FileStream file;
-		if (File.Exists (Application.persistentDataPath + "/Coins4.dat")) {
+		if (File.Exists (Application.persistentDataPath + "/Coins.dat")) {
 
-			file = File.Open (Application.persistentDataPath + "/Coins4.dat", FileMode.Open);
+			file = File.Open (Application.persistentDataPath + "/Coins.dat", FileMode.Open);
 
 			bf.Serialize (file, coins);
 			file.Close (); 
 		} 
+	}
 
+
+	/// <summary>
+	/// Raises the application quit event and save coins status
+	/// </summary>
+	void OnApplicationQuit () {
+
+		SaveCoins (localPlayer._coins);
 	}
 
 }

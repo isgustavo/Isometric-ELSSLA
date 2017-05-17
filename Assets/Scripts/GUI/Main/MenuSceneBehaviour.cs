@@ -13,10 +13,8 @@ public abstract class SetupObserver: MonoBehaviour  {
 
 public class MenuSceneBehaviour : SetupObserver {
 	
-
 	[SerializeField]
 	private GameObject _loading;
-
 
 	[SerializeField]
 	private GameObject _giftButton;
