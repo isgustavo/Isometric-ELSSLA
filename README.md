@@ -5,7 +5,15 @@ Choose your ship and play because Everybory Loves Space Shooters Like Asteroid!
 
 ![](https://github.com/isgustavo/Isometric-ELSSLA/blob/master/MainScene.gif)
 
-*It may take a few seconds to load
+*The gif may take a few seconds to load
+
+![](https://github.com/isgustavo/Isometric-ELSSLA/blob/master/gameplay.gif)
+
+*The gif may take a few seconds to load
+
+![](https://github.com/isgustavo/Isometric-ELSSLA/blob/master/Dead.gif)
+
+*The gif may take a few seconds to load
 
 ## About
 
