@@ -10,25 +10,38 @@ public abstract class OutOfCombatAreaObserver : MonoBehaviour {
 
 public class WarningBehaviour : OutOfCombatAreaObserver {
 
-	private const float _TIME_OUT_TOLERANCE = 5f;
+	private const float _TIME_OUT_TOLERANCE = 6f;
 	private float _timeOut = _TIME_OUT_TOLERANCE;
 
 	[SerializeField]
-	private Text _countDownText;
+	private Text _countdownText;
 	[SerializeField]
 	private Animation _animation;
 
 	public delegate void DeadOutOfCombatArea(Collision collision);
 	public DeadOutOfCombatArea _delegate { get; set; }
 
-	void OnEnable () {
+	/// <summary>
+	/// Starts the countdown.
+	/// </summary>
+	void StartCountdown () {
 
 		_timeOut = _TIME_OUT_TOLERANCE;
-	
-		InvokeRepeating ("UpdateTimer", 0f, 1f);
 
+		InvokeRepeating ("UpdateTimer", 0f, 1f);
 	}
 
+	/// <summary>
+	/// Stops the countdown.
+	/// </summary>
+	void StopCountdown () {
+
+		CancelInvoke ("UpdateTimer");
+	}
+
+	/// <summary>
+	/// Updates the timer.
+	/// </summary>
 	void UpdateTimer () {
 
 		if (_timeOut <= 0) {
@@ -36,7 +49,7 @@ public class WarningBehaviour : OutOfCombatAreaObserver {
 			CancelInvoke ("UpdateTimer");
 		}
 		_timeOut -= 1;
-		_countDownText.text = _timeOut.ToString ("0");
+		_countdownText.text = _timeOut.ToString ("0");
 		_animation.Play ();
 
 	}
@@ -46,8 +59,16 @@ public class WarningBehaviour : OutOfCombatAreaObserver {
 	/// </summary>
 	/// <param name="isOut">If set to <c>true</c> is out.</param>
 	public override void OnNotify (bool isOut) {
-		
-		gameObject.SetActive (isOut);
+
+		if (isOut && !gameObject.activeInHierarchy) {
+
+			gameObject.SetActive (true);
+			StartCountdown ();
+		} else if (!isOut && gameObject.activeInHierarchy) {
+			
+			StopCountdown ();
+			gameObject.SetActive (false);
+		}
 
 	}
 

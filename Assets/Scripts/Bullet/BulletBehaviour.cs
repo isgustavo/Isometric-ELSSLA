@@ -15,7 +15,7 @@ public class BulletBehaviour : NetworkBehaviour {
 
 	public const float _LIFETIME = .5f;
 	public const int _EXPLOSION_LIFETIME = 2;
-	public const int _BULLET_VELOCITY = 12;
+	public const int _BULLET_VELOCITY = 15;
 
 	[SyncVar]
 	private string _id;
