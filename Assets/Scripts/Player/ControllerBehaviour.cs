@@ -244,7 +244,7 @@ public class ControllerBehaviour : RespawnObserver {
 		_mesh.SetActive (true);
 		_rb.angularVelocity = Vector3.zero; 
 		_rocket.Play ();
-
+		gameObject.transform.position = UtilBehaviour.GetRandomPosition ();
 		_isDead = false;
 	}
 

@@ -64,6 +64,7 @@ public class AsteroidSpawnManagerBehaviour : NetworkBehaviour {
 			if (!obj.activeInHierarchy) {
 				obj.transform.position = UtilBehaviour.GetRandomPosition ();
 				obj.transform.rotation = Random.rotation;
+				obj.transform.localScale = Vector3.one;
 				obj.SetActive (true);
 
 				NetworkServer.Spawn (obj);

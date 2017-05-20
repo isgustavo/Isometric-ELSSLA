@@ -83,6 +83,7 @@ public class FragmentSpawnManagerBehaviour : MonoBehaviour {
 					Random.Range(-FRAGMENT_VELOCITY, FRAGMENT_VELOCITY) * 0.5f, 
 					0f, 
 					Random.Range(-FRAGMENT_VELOCITY, FRAGMENT_VELOCITY) * 0.5f);
+				obj.transform.localScale = Vector3.one;
 				obj.SetActive (true);
 				return obj;
 			}
@@ -98,7 +99,6 @@ public class FragmentSpawnManagerBehaviour : MonoBehaviour {
 			Random.Range(-FRAGMENT_VELOCITY, FRAGMENT_VELOCITY) * 0.5f);
 		
 		newObject.transform.parent = this.gameObject.transform;
-
 		objects.Add (newObject);
 		return newObject;
 	}

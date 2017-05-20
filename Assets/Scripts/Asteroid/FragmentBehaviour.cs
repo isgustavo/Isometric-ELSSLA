@@ -10,6 +10,31 @@ public class FragmentBehaviour : NetworkBehaviour, Destructible {
 	[SerializeField]
 	private ParticleSystem _explosion;
 
+	[SyncVar]
+	private bool _destoyed = false;
+
+	[SerializeField]
+	private Animation _removeAnimation;
+
+	void Start () {
+
+		_destoyed = false;
+	}
+
+	void Update () {
+
+		if (!isServer)
+			return;
+		
+		if ((UtilBehaviour.IsOutOfWorld (gameObject.transform.position) || 
+			UtilBehaviour.IsOutOfY(gameObject.transform.position.y)) && !_destoyed) {
+
+			_destoyed = true;
+			CmdDestroy (true);
+		}
+	}
+
+
 	/// <summary>
 	/// Fragment collider.
 	/// </summary>
@@ -18,7 +43,7 @@ public class FragmentBehaviour : NetworkBehaviour, Destructible {
 
 		BulletBehaviour bullet = collision.gameObject.GetComponent<BulletBehaviour> ();
 		if (bullet != null) {
-			CmdDestroy ();
+			CmdDestroy (false);
 		}
 
 	}
@@ -27,20 +52,30 @@ public class FragmentBehaviour : NetworkBehaviour, Destructible {
 	/// Method server-side to remove asteroid from game.
 	/// </summary>
 	[Command]
-	void CmdDestroy () {
+	void CmdDestroy (bool isOutOfArea) {
 
-		StartCoroutine (DestroyCoroutine());
+		StartCoroutine (DestroyCoroutine(isOutOfArea));
 	}
 
 	/// <summary>
 	/// Coroutine to remove fragment from game.
 	/// </summary>
-	IEnumerator DestroyCoroutine () {
+	IEnumerator DestroyCoroutine (bool isOutOfArea) {
 
-		RpcExplosion ();
+		if (isOutOfArea) {
+			RpcRemove ();
+		} else {
+			RpcExplosion ();
+		}
 		yield return new WaitForSeconds (3f);
 		RpcUnSpawn ();
 
+	}
+
+	[ClientRpc]
+	public void RpcRemove () {
+
+		_removeAnimation.Play ();
 	}
 
 	/// <summary>
@@ -61,6 +96,7 @@ public class FragmentBehaviour : NetworkBehaviour, Destructible {
 
 		_mesh.SetActive(true);
 		gameObject.SetActive (false);
+		_destoyed = false;
 		NetworkServer.UnSpawn (gameObject);
 	}
 

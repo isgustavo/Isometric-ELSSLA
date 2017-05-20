@@ -9,8 +9,25 @@ public class AsteroidBehaviour : NetworkBehaviour, Destructible {
 	private GameObject _mesh;
 	[SerializeField]
 	private ParticleSystem _explosion;
+	[SerializeField]
+	private Animation _removeAnimation;
 
+	[SyncVar]
+	private bool _destoyed = false;
 	public event SpawnFragmentDelegate _delegate;
+
+
+	void Update () {
+
+		if (!isServer)
+			return;
+		
+		if (UtilBehaviour.IsOutOfWorld (gameObject.transform.position) && !_destoyed) {
+			_destoyed = true;
+			CmdDestroy (true);
+		}
+	}
+
 
 	/// <summary>
 	/// Asteroid collider.
@@ -20,7 +37,7 @@ public class AsteroidBehaviour : NetworkBehaviour, Destructible {
 
 		BulletBehaviour bullet = collision.gameObject.GetComponent<BulletBehaviour> ();
 		if (bullet != null) {
-			CmdDestroy ();
+			CmdDestroy (false);
 		}
 
 	}
@@ -28,22 +45,36 @@ public class AsteroidBehaviour : NetworkBehaviour, Destructible {
 	/// <summary>
 	/// Method server-side to remove asteroid from game.
 	/// </summary>
+	/// <param name="isOutOfArea">When object is out of game area.</param>
 	[Command]
-	void CmdDestroy () {
+	void CmdDestroy (bool isOutOfArea) {
 
-		StartCoroutine (RemoveAndCallFragmentCoroutine());
+		StartCoroutine (RemoveAndCallFragmentCoroutine(isOutOfArea));
 	}
 
 	/// <summary>
 	/// Coroutine to remove asteroid from game and call fragment spawn.
 	/// </summary>
-	IEnumerator RemoveAndCallFragmentCoroutine () {
+	IEnumerator RemoveAndCallFragmentCoroutine (bool isOutOfArea) {
 
-		RpcExplosion ();
-		_delegate (this.gameObject);
+		if (isOutOfArea) {
+			RpcRemove ();
+		} else {
+			RpcExplosion ();
+			_delegate (this.gameObject);
+		}
 		yield return new WaitForSeconds (3f);
 		RpcUnSpawn ();
 
+	}
+
+	/// <summary>
+	/// Rpcs the remove. 
+	/// </summary>
+	[ClientRpc]
+	void RpcRemove () {
+
+		_removeAnimation.Play ();
 	}
 
 	/// <summary>
@@ -64,6 +95,7 @@ public class AsteroidBehaviour : NetworkBehaviour, Destructible {
 
 		_mesh.SetActive(true);
 		gameObject.SetActive (false);
+		_destoyed = false;
 		NetworkServer.UnSpawn (gameObject);
 	}
 
