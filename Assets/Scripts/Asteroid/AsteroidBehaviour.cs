@@ -5,6 +5,9 @@ using UnityEngine.Networking;
 
 public class AsteroidBehaviour : NetworkBehaviour, Destructible {
 
+	private const int START_ANIMATION_DURATION = 5;
+	private const float IGNORE_LERP = 0.001f;
+
 	[SerializeField]
 	private GameObject _mesh;
 	[SerializeField]
@@ -16,6 +19,9 @@ public class AsteroidBehaviour : NetworkBehaviour, Destructible {
 	private bool _destoyed = false;
 	public event SpawnFragmentDelegate _delegate;
 
+	[SyncVar]
+	public bool _startAnimation = true;
+
 
 	void Update () {
 
@@ -26,6 +32,21 @@ public class AsteroidBehaviour : NetworkBehaviour, Destructible {
 			_destoyed = true;
 			CmdDestroy (true);
 		}
+
+
+		/// From initial asteroid position to game position
+		if(_startAnimation && Mathf.Abs(transform.position.y) < UtilBehaviour.Y_GAME - IGNORE_LERP) {
+			transform.position = Vector3.Lerp (transform.position, 
+				new Vector3 (transform.position.x, 
+					UtilBehaviour.Y_GAME, 
+					transform.position.z), 
+				Time.deltaTime * START_ANIMATION_DURATION);
+		} else {
+			_startAnimation = false;
+			transform.position = new Vector3 (gameObject.transform.position.x, UtilBehaviour.Y_GAME, gameObject.transform.position.z);
+		}
+
+
 	}
 
 
@@ -96,6 +117,7 @@ public class AsteroidBehaviour : NetworkBehaviour, Destructible {
 		_mesh.SetActive(true);
 		gameObject.SetActive (false);
 		_destoyed = false;
+		_startAnimation = true;
 		NetworkServer.UnSpawn (gameObject);
 	}
 

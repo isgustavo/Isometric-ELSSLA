@@ -9,9 +9,7 @@ public class AsteroidSpawnManagerBehaviour : NetworkBehaviour {
 
 	private static int ASTEROID_VELOCITY = 5;
 	private static int OBJECT_POOL_SIZE = 20;
-	private static float TIME_BETWEEN_ASTEROID = 5f;
-
-	private float _timeTilNextAsteroid = .0f;
+	private static float TIME_BETWEEN_ASTEROID = 0.5f;
 
 	[SerializeField]
 	private GameObject _asteroidPrefab;
@@ -21,10 +19,12 @@ public class AsteroidSpawnManagerBehaviour : NetworkBehaviour {
 	private FragmentSpawnManagerBehaviour _fragmentSpawnManager;
 
 	void Start() {
-		
+
+		InvokeRepeating ("RespawnFromPool", 0f, TIME_BETWEEN_ASTEROID);
+
 		_pool = new GameObject[OBJECT_POOL_SIZE];
 		for (int i = 0; i < OBJECT_POOL_SIZE; ++i) {
-			_pool[i] =  (GameObject) Instantiate(_asteroidPrefab, UtilBehaviour.GetRandomPosition (), Random.rotation);
+			_pool[i] =  (GameObject) Instantiate(_asteroidPrefab, UtilBehaviour.GetRandomAsteroidPosition (), Random.rotation);
 			_pool[i].name = "AsteroidPoolObject" + i;
 
 			//Set delegate to call fragments when it is destoyed
@@ -43,17 +43,6 @@ public class AsteroidSpawnManagerBehaviour : NetworkBehaviour {
 		}
 	}
 		
-	void Update () {
-
-		if (_timeTilNextAsteroid < 0) {
-			_timeTilNextAsteroid = TIME_BETWEEN_ASTEROID;
-
-			RespawnFromPool ();
-		}
-
-		_timeTilNextAsteroid -= Time.deltaTime;
-
-	}
 
 	/// <summary>
 	/// Method to respawn asteroid from pool.
@@ -62,12 +51,13 @@ public class AsteroidSpawnManagerBehaviour : NetworkBehaviour {
 
 		foreach (GameObject obj in _pool) {
 			if (!obj.activeInHierarchy) {
-				obj.transform.position = UtilBehaviour.GetRandomPosition ();
+				obj.transform.position = UtilBehaviour.GetRandomAsteroidPosition ();
 				obj.transform.rotation = Random.rotation;
 				obj.transform.localScale = Vector3.one;
 				obj.SetActive (true);
 
 				NetworkServer.Spawn (obj);
+				break;
 			}
 		}
 	}
