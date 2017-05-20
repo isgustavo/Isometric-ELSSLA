@@ -8,7 +8,7 @@ public delegate void SpawnFragmentDelegate (GameObject asteroid);
 public class AsteroidSpawnManagerBehaviour : NetworkBehaviour {
 
 	private static int ASTEROID_VELOCITY = 5;
-	private static int OBJECT_POOL_SIZE = 20;
+	private static int OBJECT_POOL_SIZE = 30;
 	private static float TIME_BETWEEN_ASTEROID = 0.5f;
 
 	[SerializeField]
