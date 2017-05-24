@@ -16,7 +16,6 @@ public class KD {
 
 }
 
-
 public class Player {
 
 	//Facebook id from Facebook Api

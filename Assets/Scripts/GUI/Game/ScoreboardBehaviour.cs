@@ -6,6 +6,10 @@ using Facebook.Unity;
 public abstract class UpdateObserver: MonoBehaviour {
 
 	public abstract void OnNotify ();
+
+	public abstract void OnAuthError ();
+
+	public abstract void OnError ();
 }
 
 public class ScoreboardBehaviour : UpdateObserver {
@@ -76,6 +80,14 @@ public class ScoreboardBehaviour : UpdateObserver {
 		UpdateScoreboard ();
 	}
 
+	public override void OnAuthError () {
+
+	}
+
+	public override void OnError () {
+
+	}
+
 	/// <summary>
 	/// Update the scoreboard list
 	/// </summary>
@@ -87,22 +99,23 @@ public class ScoreboardBehaviour : UpdateObserver {
 		_facebookConnectContent.SetActive (false);
 
 		int count = PlayerBehaviour.instance.facebookPlayers.Count;
+		Debug.Log ("count Player"+count);
 		for (int i = 0; i < count; i++) {
 			GameObject obj;
-			if (_scoreboardListContent.transform.childCount > 0 
-				&& _scoreboardListContent.transform.childCount > i) {
-
-				obj = _scoreboardListContent.transform.GetChild (i).gameObject;
-			} else {
-
+			//if (_scoreboardListContent.transform.childCount > 0 
+			//	&& _scoreboardListContent.transform.childCount > i) {
+			//	Debug.Log ("child"+i);
+			//	obj = _scoreboardListContent.transform.GetChild (i).gameObject;
+			//} else {
+			//	Debug.Log ("GameObject");
 				obj = Instantiate (_scoreboardCellPrefab);
 				obj.transform.SetParent (_scoreboardListContent.transform);
-			}
+			//}
 
 			Player p = PlayerBehaviour.instance.facebookPlayers [i];
 			ScoreboardCellBehaviour cell = obj.GetComponent<ScoreboardCellBehaviour> ();
 			cell.SetValues (i + 1, p._picture, p._name, p._kd, p._highScore);
-			cell.StartAnimation ();
+			//cell.StartAnimation ();
 
 		}
 
@@ -112,6 +125,7 @@ public class ScoreboardBehaviour : UpdateObserver {
 			for (int i = count; i < MIN_CELL_COUNT; i++) {
 				GameObject cell =  Instantiate (_scoreboardCellPrefab);
 				cell.transform.SetParent (_scoreboardListContent.transform);
+				cell.transform.localScale = Vector3.one;
 			}
 		}
 

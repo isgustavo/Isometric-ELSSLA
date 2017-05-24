@@ -56,13 +56,27 @@ public class PlayerBehaviour : MonoBehaviour {
 	/// Sets the init to Facebook Api.
 	/// If player logged in going to load from Facebook Api the player data and coins from local storage. See PlayerInfoBasicCallback callback.
 	/// If not logged in going to create a dumb player and load the coins from local storage.
+	/// me?fields=id,scores 
+	///{
+	///	"id": "104790426736576",
+	///	"scores": {
+	///		"data": [
+	///			{
+	///				"score": 230,
+	///				"user": {
+	///					"name": "Will Alafafhefgdfe Moidusen",
+	///					"id": "104790426736576"
+	///				}
+	///			}
+	///		]
+	///	}
+	///}
 	/// </summary>
 	void SetInit() {
 
-		//MenuSceneBehaviour.instance.SetLoading (true);
 		if (FB.IsLoggedIn) {
 
-			FB.API ("/me?fields=id,first_name,score", HttpMethod.GET, PlayerInfoBasicCallback);
+			FB.API ("me?fields=id,name,scores", HttpMethod.GET, PlayerInfoBasicCallback);
 		} else {
 
 			_localPlayer = new Player (LoadCoins());
@@ -91,24 +105,35 @@ public class PlayerBehaviour : MonoBehaviour {
 	void PlayerInfoBasicCallback(IResult result) {
 
 		if (result.Error != null) {
-			// TODO: DO SAMETHING
+
+			_localPlayer = new Player (LoadCoins());
+			_observer.OnNotify ();
 		} else {
-			
+
 			string id = result.ResultDictionary["id"].ToString ();
-			string name = result.ResultDictionary ["first_name"].ToString ();
+			string name = result.ResultDictionary["name"].ToString ();
+			int highscore = 0;
+			Coins coins = LoadCoins ();
 
-			IDictionary<string, object> data = (IDictionary<string, object>)result.ResultDictionary["score"];
-			List<object> listObj = (List<object>) data ["data"];
+			if(result.ResultDictionary.ContainsKey ("scores")){
 
-			foreach (object obj in listObj) {
+				IDictionary<string, object> data = (IDictionary<string, object>)result.ResultDictionary["score"];
+				List<object> listObj = (List<object>) data ["data"];
 
-				var entry = (Dictionary<string, object>)obj;
-				string highScore = entry ["score"].ToString ();
+				foreach (object obj in listObj) {
 
-				_localPlayer = new Player (id, name, Int32.Parse(highScore), LoadCoins());
-				_observer.OnNotify ();
-				break;
+					var entry = (Dictionary<string, object>)obj;
+
+					if (entry ["score"] != null) {
+						highscore = Int32.Parse (entry ["score"].ToString ());
+					}
+
+					break;
+				}
 			}
+
+			_localPlayer = new Player (id, name, highscore, LoadCoins ());
+			_observer.OnNotify ();
 		} 
 	}
 
@@ -142,16 +167,15 @@ public class PlayerBehaviour : MonoBehaviour {
 
 		if (result.Error != null) {
 
-			//Debug.Log (result.Error);
-			//TODO:
+			_facebookPlayersObserver.OnAuthError();
+		
 		} else {
 			if (FB.IsLoggedIn) {
 
-				FB.API ("/me?fields=id,first_name,score", HttpMethod.GET, PlayerInfoCallback);
+				FB.API ("me?fields=id,name,scores", HttpMethod.GET, PlayerInfoCallback);
 
 			} else {
-				//Debug.Log ("FB is not logged in");
-				//TODO:
+				_facebookPlayersObserver.OnAuthError();
 			}
 		}
 	}
@@ -165,34 +189,40 @@ public class PlayerBehaviour : MonoBehaviour {
 
 		if (result.Error != null) {
 
-			//Debug.Log (result.Error);
-			//TODO:
+			_facebookPlayersObserver.OnError();
 		} else {
+			
 			string id = result.ResultDictionary["id"].ToString ();
-			string name = result.ResultDictionary ["first_name"].ToString ();
-			string highScore = "0";
+			string name = result.ResultDictionary["name"].ToString ();
+			int highscore = 0;
+			Coins coins = LoadCoins ();
 
-			IDictionary<string, object> data = (IDictionary<string, object>)result.ResultDictionary["score"];
-			List<object> listObj = (List<object>) data ["data"];
+			if (result.ResultDictionary.ContainsKey ("scores")) {
 
-			foreach (object obj in listObj) {
+				IDictionary<string, object> data = (IDictionary<string, object>)result.ResultDictionary ["score"];
+				List<object> listObj = (List<object>)data ["data"];
 
-				var entry = (Dictionary<string, object>)obj;
-				highScore = entry ["score"].ToString ();
-				break;
-			}
+				foreach (object obj in listObj) {
 
-			Coins coins = _localPlayer._coins;
-			coins.SetFacebookGift ();
+					var entry = (Dictionary<string, object>)obj;
 
-			//Verify after login if player already has a highscore, if YES, keep the higherst score 
-			int highscore = Int32.Parse (highScore);
-			if (_localPlayer._highScore > highscore) {
-				SaveNewHighScore (_localPlayer._highScore);
-				_localPlayer = new Player (id, name, _localPlayer._highScore, coins);
+					if (entry ["score"] != null) {
+						highscore = Int32.Parse (entry ["score"].ToString ());
+					}
+
+					break;
+				}
 			} else {
-				_localPlayer = new Player (id, name, highscore, coins);
+				
+				coins.SetFacebookGift ();
 			}
+		
+			if (_localPlayer._highScore > highscore) {
+				highscore = _localPlayer._highScore;
+				SaveNewHighScore (highscore);
+			} 
+
+			_localPlayer = new Player (id, name, highscore, coins);
 
 			//Notifies the server that the player has changed id
 			foreach (GameObject obj in GameObject.FindGameObjectsWithTag("Player")) {
@@ -216,48 +246,50 @@ public class PlayerBehaviour : MonoBehaviour {
 
 		_facebookPlayers = new List<Player> ();
 
-		IDictionary<string, object> data = result.ResultDictionary;
-		List<object> listObj = (List<object>) data ["data"];
+		if (result.ResultDictionary.ContainsKey ("data")) {
 
-		FirebaseApp.DefaultInstance.SetEditorDatabaseUrl(UtilBehaviour.FIREBASE_REALTIME_DATABASE_PATH);
-		_reference = FirebaseDatabase.DefaultInstance.RootReference;
+			IDictionary<string, object> data = result.ResultDictionary;
+			List<object> listObj = (List<object>) data ["data"];
 
-		_reference.Child (UtilBehaviour.ROOT).Child (_localPlayer._id).Child (UtilBehaviour.GROUP).GetValueAsync ().ContinueWith (task => {
-			if (task.IsFaulted) {
+			FirebaseApp.DefaultInstance.SetEditorDatabaseUrl(UtilBehaviour.FIREBASE_REALTIME_DATABASE_PATH);
+			_reference = FirebaseDatabase.DefaultInstance.RootReference;
 
-				//Debug.Log ("Firebase error:" + task.Exception );
-				//TODO:
-			} else if (task.IsCompleted) {
-				DataSnapshot snapshot = task.Result;
+			_reference.Child (UtilBehaviour.ROOT).Child (_localPlayer._id).Child (UtilBehaviour.GROUP).GetValueAsync ().ContinueWith (task => {
+				if (task.IsFaulted) {
 
-				foreach (object obj in listObj) {
+					_facebookPlayersObserver.OnError();
+				} else if (task.IsCompleted) {
+					DataSnapshot snapshot = task.Result;
 
-					var entry = (Dictionary<string, object>) obj;
-					var user = (Dictionary<string, object>) entry ["user"];
+					foreach (object obj in listObj) {
 
-					string id = user ["id"].ToString ();
-					string name = user ["name"].ToString ();
-					string highScore = entry ["score"].ToString ();
-					int k = 0, d = 0;
+						var entry = (Dictionary<string, object>) obj;
+						var user = (Dictionary<string, object>) entry ["user"];
 
-					if (snapshot.Child(id).Value != null) {
-						k = Int32.Parse(snapshot.Child(id).Child("K").Value.ToString ()); 
-						d = Int32.Parse(snapshot.Child(id).Child("D").Value.ToString ()); 
-					} 
+						string id = user ["id"].ToString ();
+						string name = user ["name"].ToString ();
+						int highscore = Int32.Parse(entry ["score"].ToString ());
+						int k = 0, d = 0;
 
-					KD kd = null;
-					if (_localPlayer._id != id) {
-						kd = new KD (k, d);
-					} 
+						if (snapshot.Child(id).Value != null) {
+							k = Int32.Parse(snapshot.Child(id).Child("K").Value.ToString ()); 
+							d = Int32.Parse(snapshot.Child(id).Child("D").Value.ToString ()); 
+						} 
 
-					Player player = new Player (id, name, Int32.Parse(highScore), kd);
-					_facebookPlayers.Add (player);
+						KD kd = null;
+						if (_localPlayer._id != id) {
+							kd = new KD (k, d);
+						} 
 
+						Player friendPlayer = new Player (id, name, highscore, kd);
+						_facebookPlayers.Add (friendPlayer);
+
+					}
+
+					_facebookPlayersObserver.OnNotify();
 				}
-				_facebookPlayersObserver.OnNotify();
-			}
-		});
-			
+			});
+		}
 	}
 
 
@@ -266,7 +298,7 @@ public class PlayerBehaviour : MonoBehaviour {
 	/// </summary>
 	/// <param name="value">High score value</param>
 	public void SaveNewHighScore (int value) {
-
+		
 		if (_localPlayer._highScore > value) {
 			return;
 		}
@@ -274,6 +306,7 @@ public class PlayerBehaviour : MonoBehaviour {
 		_localPlayer._highScore = value;
 
 		if (FB.IsLoggedIn) {
+			Debug.Log ("SaveNewHighScore"+_localPlayer._highScore);
 			var scoreData = new Dictionary<string, string> ();
 			scoreData ["score"] = value.ToString ();
 
@@ -302,8 +335,7 @@ public class PlayerBehaviour : MonoBehaviour {
 		//Load KD values by foe id
 		_reference.Child(UtilBehaviour.ROOT).Child(_localPlayer._id).Child(UtilBehaviour.GROUP).Child(id).GetValueAsync().ContinueWith(task => {
 			if (task.IsFaulted) {
-				//Debug.Log ("Firebase error:" + task.Exception );
-				//TODO:
+				
 			}
 			else if (task.IsCompleted) {
 				DataSnapshot snapshot = task.Result;

@@ -207,14 +207,12 @@ public class ControllerBehaviour : RespawnObserver {
 		string name = "";
 		if (collision != null) {
 			BulletBehaviour bullet = collision.gameObject.GetComponent<BulletBehaviour> ();
-			if (bullet != null && bullet.playerName != "") {
+			if (bullet != null) {
 
 				PlayerBehaviour.instance.SaveNewKD (bullet.id);
 				name = bullet.playerName;
 			}
-		} else {
-			name = "Programmer";
-		}
+		} 
 			
 		PlayerBehaviour.instance.SaveNewHighScore (_score);
 		_deadObserver.OnNotify (_score, name);

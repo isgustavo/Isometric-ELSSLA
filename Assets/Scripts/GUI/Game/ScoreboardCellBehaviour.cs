@@ -17,8 +17,6 @@ public class ScoreboardCellBehaviour : MonoBehaviour {
 	private Text _dText;
 	[SerializeField]
 	private Text _highScoreText;
-	[SerializeField]
-	private Animation _animation;
 
 	/// <summary>
 	/// Sets the scoreboard cell values.
@@ -29,9 +27,10 @@ public class ScoreboardCellBehaviour : MonoBehaviour {
 	/// <param name="kd">Players Kd.</param>
 	/// <param name="highScore">Players High score.</param>
 	public void SetValues (int position, Sprite image, string name, KD kd, int highScore) {
+		transform.localScale = Vector3.one;
 
 		_positionText.text = position.ToString ("00");
-
+		_pictureImage.sprite = image;
 		_nameText.text = name;
 
 		if (kd != null) {
@@ -43,17 +42,6 @@ public class ScoreboardCellBehaviour : MonoBehaviour {
 		_highScoreText.text = highScore.ToString ();
 
 	}
-
-	/// <summary>
-	/// Starts the animation.
-	/// </summary>
-	public void StartAnimation () {
-
-		_animation.Play ();
-	}
-
-
-
-
+		
 
 }

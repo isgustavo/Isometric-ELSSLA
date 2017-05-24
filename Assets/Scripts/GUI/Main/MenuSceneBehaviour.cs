@@ -56,7 +56,6 @@ public class MenuSceneBehaviour : SetupObserver {
 
 	}
 
-
 	/// <summary>
 	/// Coroutine to each minute decrease time for new gift.
 	/// </summary>
