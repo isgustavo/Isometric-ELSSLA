@@ -199,7 +199,7 @@ public class PlayerBehaviour : MonoBehaviour {
 
 			if (result.ResultDictionary.ContainsKey ("scores")) {
 
-				IDictionary<string, object> data = (IDictionary<string, object>)result.ResultDictionary ["score"];
+				IDictionary<string, object> data = (IDictionary<string, object>) result.ResultDictionary ["scores"];
 				List<object> listObj = (List<object>)data ["data"];
 
 				foreach (object obj in listObj) {

@@ -82,10 +82,19 @@ public class ScoreboardBehaviour : UpdateObserver {
 
 	public override void OnAuthError () {
 
+		_loadingContent.SetActive (false);
+		_scoreboardContent.SetActive (true);
+		_facebookInviteContent.SetActive (false);
+		_facebookConnectContent.SetActive (true);
+		_facebookConnectContent.SetActive (false);
 	}
 
 	public override void OnError () {
 
+		_loadingContent.SetActive (false);
+		_scoreboardContent.SetActive (true);
+		_facebookInviteContent.SetActive (true);
+		_facebookConnectContent.SetActive (false);
 	}
 
 	/// <summary>
@@ -99,28 +108,25 @@ public class ScoreboardBehaviour : UpdateObserver {
 		_facebookConnectContent.SetActive (false);
 
 		int count = PlayerBehaviour.instance.facebookPlayers.Count;
-		Debug.Log ("count Player"+count);
+
 		for (int i = 0; i < count; i++) {
 			GameObject obj;
-			//if (_scoreboardListContent.transform.childCount > 0 
-			//	&& _scoreboardListContent.transform.childCount > i) {
-			//	Debug.Log ("child"+i);
-			//	obj = _scoreboardListContent.transform.GetChild (i).gameObject;
-			//} else {
-			//	Debug.Log ("GameObject");
+			if (_scoreboardListContent.transform.childCount > 0 
+				&& _scoreboardListContent.transform.childCount > i) {
+				obj = _scoreboardListContent.transform.GetChild (i).gameObject;
+			} else {
 				obj = Instantiate (_scoreboardCellPrefab);
 				obj.transform.SetParent (_scoreboardListContent.transform);
-			//}
+			}
 
 			Player p = PlayerBehaviour.instance.facebookPlayers [i];
 			ScoreboardCellBehaviour cell = obj.GetComponent<ScoreboardCellBehaviour> ();
 			cell.SetValues (i + 1, p._picture, p._name, p._kd, p._highScore);
-			//cell.StartAnimation ();
 
 		}
 
 
-		if (count <= MIN_CELL_COUNT) {
+		if (_scoreboardListContent.transform.childCount < MIN_CELL_COUNT) {
 
 			for (int i = count; i < MIN_CELL_COUNT; i++) {
 				GameObject cell =  Instantiate (_scoreboardCellPrefab);
