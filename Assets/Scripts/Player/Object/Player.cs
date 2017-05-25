@@ -18,6 +18,8 @@ public class KD {
 
 public class Player {
 
+	public const string NO_FB_LOGGED_NAME_PREFIX = "Player";
+
 	//Facebook id from Facebook Api
 	public string _id { get; }
 
@@ -30,7 +32,7 @@ public class Player {
 	public Sprite _picture { get; set; }
 
 	//Facebook score from Facebook Score Api
-	public int _highScore { get; set;}
+	public int _highScore { get; set; }
 
 	//KD values from Firebase realtime database Api
 	public KD _kd { get; }
@@ -45,7 +47,7 @@ public class Player {
 	/// <param name="coins">Coins.</param>
 	public Player (Coins coins) {
 
-		_id = "player" + UnityEngine.Random.Range (111, 999);
+		_id = Player.NO_FB_LOGGED_NAME_PREFIX + UnityEngine.Random.Range (111, 999);
 		_logged = false;
 		_highScore = 0;
 		_coins = coins;
@@ -60,17 +62,17 @@ public class Player {
 		FB.API ("/"+_id+"/picture?type=square&height=128&width=128", HttpMethod.GET, ProfilePicCallBack);
 	}
 
-	public Player (string id, string name, int highScore, Coins coins) 
+	public Player (string id, string name, int highscore, Coins coins) 
 		: this(id, name) {
 
-		_highScore = highScore;
+		_highScore = highscore;
 		_coins = coins;
 	}
 
-	public Player (string id, string name, int highScore, KD kd) 
+	public Player (string id, string name, int highscore, KD kd) 
 		: this(id, name) {
 
-		_highScore = highScore;
+		_highScore = highscore;
 		_kd = kd;
 	}
 

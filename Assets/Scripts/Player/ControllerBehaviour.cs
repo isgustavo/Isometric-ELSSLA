@@ -115,7 +115,6 @@ public class ControllerBehaviour : RespawnObserver, Destructible {
 	/// </summary>
 	public override void OnStartLocalPlayer () {
 		base.OnStartLocalPlayer ();
-		Debug.Log ("OnStartLocalPlayer");
 
 		CmdInit (PlayerBehaviour.instance.localPlayer._id);
 
@@ -204,7 +203,7 @@ public class ControllerBehaviour : RespawnObserver, Destructible {
 	/// At last, the _score, _isNewHighScore and local variable name going to send to game scene manager.
 	/// </summary>
 	void OnCollisionEnter(Collision collision) { 
-
+		
 		_isDead = true;
 		_mesh.SetActive (false);
 
@@ -213,17 +212,16 @@ public class ControllerBehaviour : RespawnObserver, Destructible {
 
 		if (!isLocalPlayer)
 			return;
-		
+
 		string name = "";
 		if (collision != null) {
 			BulletBehaviour bullet = collision.gameObject.GetComponent<BulletBehaviour> ();
-			if (bullet != null) {
-
+			if (bullet != null && !bullet.id.StartsWith (Player.NO_FB_LOGGED_NAME_PREFIX)) {
 				PlayerBehaviour.instance.SaveNewKD (bullet.id);
 				name = bullet.playerName;
-			}
+			} 
 		} 
-			
+
 		PlayerBehaviour.instance.SaveNewHighScore (_score);
 		_deadObserver.OnNotify (_score, name);
 

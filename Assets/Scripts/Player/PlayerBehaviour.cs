@@ -113,7 +113,6 @@ public class PlayerBehaviour : MonoBehaviour {
 			string id = result.ResultDictionary["id"].ToString ();
 			string name = result.ResultDictionary["name"].ToString ();
 			int highscore = 0;
-			Coins coins = LoadCoins ();
 
 			if(result.ResultDictionary.ContainsKey ("scores")) {
 
@@ -298,15 +297,15 @@ public class PlayerBehaviour : MonoBehaviour {
 	/// </summary>
 	/// <param name="value">High score value</param>
 	public void SaveNewHighScore (int value) {
-		
-		if (_localPlayer._highScore > value) {
+
+		if (_localPlayer._highScore >= value) {
 			return;
 		}
 
 		_localPlayer._highScore = value;
 
 		if (FB.IsLoggedIn) {
-			Debug.Log ("SaveNewHighScore"+_localPlayer._highScore);
+			
 			var scoreData = new Dictionary<string, string> ();
 			scoreData ["score"] = value.ToString ();
 
@@ -331,6 +330,13 @@ public class PlayerBehaviour : MonoBehaviour {
 
 		if (!FB.IsLoggedIn) 
 			return;
+
+		if (_reference == null) {
+
+			FirebaseApp.DefaultInstance.SetEditorDatabaseUrl(UtilBehaviour.FIREBASE_REALTIME_DATABASE_PATH);
+			_reference = FirebaseDatabase.DefaultInstance.RootReference;
+		}
+
 
 		//Load KD values by foe id
 		_reference.Child(UtilBehaviour.ROOT).Child(_localPlayer._id).Child(UtilBehaviour.GROUP).Child(id).GetValueAsync().ContinueWith(task => {
