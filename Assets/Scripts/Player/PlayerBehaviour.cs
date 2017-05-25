@@ -115,9 +115,9 @@ public class PlayerBehaviour : MonoBehaviour {
 			int highscore = 0;
 			Coins coins = LoadCoins ();
 
-			if(result.ResultDictionary.ContainsKey ("scores")){
+			if(result.ResultDictionary.ContainsKey ("scores")) {
 
-				IDictionary<string, object> data = (IDictionary<string, object>)result.ResultDictionary["score"];
+				IDictionary<string, object> data = (IDictionary<string, object>)result.ResultDictionary["scores"];
 				List<object> listObj = (List<object>) data ["data"];
 
 				foreach (object obj in listObj) {

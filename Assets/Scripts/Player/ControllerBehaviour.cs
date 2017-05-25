@@ -10,7 +10,7 @@ public abstract class RespawnObserver: NetworkBehaviour  {
 }
 
 [RequireComponent(typeof(Rigidbody))]
-public class ControllerBehaviour : RespawnObserver {
+public class ControllerBehaviour : RespawnObserver, Destructible {
 
 	private const int _INITIAL_SCORE = 0;
 	private const int _SPEED = 10;
@@ -22,6 +22,9 @@ public class ControllerBehaviour : RespawnObserver {
 	[SyncVar (hook="OnScoreChange")]
 	public int _score = _INITIAL_SCORE;
 	private bool _isDead = false;
+
+	[SyncVar (hook="OnNameChange")]
+	public string _nameObject;
 
 	[SerializeField]
 	private GameObject _mesh;
@@ -111,7 +114,10 @@ public class ControllerBehaviour : RespawnObserver {
 	/// Method called when the local player was stated.
 	/// </summary>
 	public override void OnStartLocalPlayer () {
-		base.OnStartServer ();
+		base.OnStartLocalPlayer ();
+		Debug.Log ("OnStartLocalPlayer");
+
+		CmdInit (PlayerBehaviour.instance.localPlayer._id);
 
 		GameObject.FindGameObjectWithTag ("MainCamera").GetComponent<GameCameraBehaviour> ().SetTarget (transform);
 
@@ -129,19 +135,17 @@ public class ControllerBehaviour : RespawnObserver {
 			obj.GetComponent<GameSceneBehaviour> ()._observer = this;
 		}
 	}
+		
 
 	/// <summary>
-	/// Method called when a client was stated.
+	/// The SyncVar will only work from server to client.
 	/// </summary>
-	public override void OnStartClient () {
-		base.OnStartClient ();
+	/// <param name="transformName">Transform name.</param>
+	[Command]
+	void CmdInit(string transformName) {
 
-		gameObject.transform.name = PlayerBehaviour.instance.localPlayer._id;
-
-		if (isServer) {
-
-			PlayersManager.instance.AddPlayer (gameObject.transform.name, this);
-		}
+		_nameObject = transformName;
+		PlayersManager.instance.AddPlayer (gameObject.transform.name, this);
 	}
 
 	/// <summary>
@@ -183,6 +187,12 @@ public class ControllerBehaviour : RespawnObserver {
 			_scoreObserver.OnNotify (_score);
 		}
 			
+	}
+
+	public void OnNameChange (string value) {
+		_nameObject = value;
+
+		gameObject.transform.name = _nameObject;
 	}
 
 	/// <summary>
@@ -269,4 +279,12 @@ public class ControllerBehaviour : RespawnObserver {
 		PlayersManager.instance.AddPlayer (id, this);
 	}
 
+	/// <summary>
+	/// Destructible interface method.
+	/// </summary>
+	/// <returns>Returns points to destroy player.</returns>
+	public int GetPoints() {
+
+		return 100;
+	}
 }
