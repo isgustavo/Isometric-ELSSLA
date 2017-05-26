@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System;
+using System.Globalization;
 using UnityEngine;
 using UnityEngine.Networking;
 using Facebook.Unity;
@@ -203,7 +205,7 @@ public class ControllerBehaviour : RespawnObserver, Destructible {
 	/// At last, the _score, _isNewHighScore and local variable name going to send to game scene manager.
 	/// </summary>
 	void OnCollisionEnter(Collision collision) { 
-		
+
 		_isDead = true;
 		_mesh.SetActive (false);
 
@@ -225,7 +227,9 @@ public class ControllerBehaviour : RespawnObserver, Destructible {
 		PlayerBehaviour.instance.SaveNewHighScore (_score);
 		_deadObserver.OnNotify (_score, name);
 
+
 	}
+		
 
 	/// <summary>
 	/// Respawn notify

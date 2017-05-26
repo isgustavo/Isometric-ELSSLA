@@ -47,7 +47,10 @@ public class PlayerBehaviour : MonoBehaviour {
 	}
 
 	void Start () {
-		
+
+		FirebaseApp.DefaultInstance.SetEditorDatabaseUrl (UtilBehaviour.FIREBASE_REALTIME_DATABASE_PATH);
+		_reference = FirebaseDatabase.DefaultInstance.RootReference;
+
 		FB.Init (SetInit, OnHideUnity);
 
 	}
@@ -250,8 +253,10 @@ public class PlayerBehaviour : MonoBehaviour {
 			IDictionary<string, object> data = result.ResultDictionary;
 			List<object> listObj = (List<object>) data ["data"];
 
-			FirebaseApp.DefaultInstance.SetEditorDatabaseUrl(UtilBehaviour.FIREBASE_REALTIME_DATABASE_PATH);
-			_reference = FirebaseDatabase.DefaultInstance.RootReference;
+			if (_reference == null) {
+				FirebaseApp.DefaultInstance.SetEditorDatabaseUrl (UtilBehaviour.FIREBASE_REALTIME_DATABASE_PATH);
+				_reference = FirebaseDatabase.DefaultInstance.RootReference;
+			}
 
 			_reference.Child (UtilBehaviour.ROOT).Child (_localPlayer._id).Child (UtilBehaviour.GROUP).GetValueAsync ().ContinueWith (task => {
 				if (task.IsFaulted) {

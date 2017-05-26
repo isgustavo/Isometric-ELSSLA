@@ -1,5 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
+using System;
+using System.Globalization;
 using UnityEngine;
 using Facebook.Unity;
 
@@ -60,7 +63,6 @@ public class ScoreboardBehaviour : UpdateObserver {
 		_facebookConnectContent.SetActive (false);
 
 		if (FB.IsLoggedIn) {
-
 			PlayerBehaviour.instance.UpdateScoreAndKD ();
 
 		} else {
@@ -72,6 +74,7 @@ public class ScoreboardBehaviour : UpdateObserver {
 		}
 
 	}
+
 
 	/// <summary>
 	/// Raises the notify event. Each friends scoreboard list update

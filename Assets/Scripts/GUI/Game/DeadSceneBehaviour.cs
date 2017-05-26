@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System;
+using System.Globalization;
 using UnityEngine;
 using UnityEngine.UI;
 using Facebook.Unity;
@@ -36,6 +38,7 @@ public class DeadSceneBehaviour : MonoBehaviour {
 	public void SetActive (int scored, string name) {
 
 		gameObject.SetActive (true);
+
 		_scoreContainer.InitWithScore (scored);
 
 		if (name != "") {
@@ -51,9 +54,11 @@ public class DeadSceneBehaviour : MonoBehaviour {
 		}
 			
 		_coinsContent.SetActive (true);
+
 		_coinCountText.text = PlayerBehaviour.instance.localPlayer._coins.count.ToString ();
 
 		_scoreboardContent.SetActive ();
+
 
 	}
 
