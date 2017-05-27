@@ -253,8 +253,11 @@ public class ControllerBehaviour : RespawnObserver, Destructible {
 		_score = _INITIAL_SCORE;
 		_mesh.SetActive (true);
 		_rb.angularVelocity = Vector3.zero; 
+		_rb.velocity = Vector3.zero;
+		_rb.AddForce (Vector3.zero);
 		_rocket.Play ();
 		gameObject.transform.position = UtilBehaviour.GetRandomPosition ();
+		gameObject.transform.rotation = Quaternion.identity;
 		_isDead = false;
 	}
 
