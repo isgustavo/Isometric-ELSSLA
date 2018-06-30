@@ -1,6 +1,12 @@
 # Isometric-ELSSLA
 
-!This project was moved to a private repository!
+*06/30/2018 Update
+
+This is a early repository for this project [ELSSLA](https://connect.unity.com/p/5ac64012090915001d7554b7)
+
+Since I moved this project to a private repository the source code and project was rebuilt. 
+
+Gifs below represent this source code repository
 
 ![](https://github.com/isgustavo/Isometric-ELSSLA/blob/master/MainScene.gif)
 
@@ -13,12 +19,3 @@
 ![](https://github.com/isgustavo/Isometric-ELSSLA/blob/master/Dead.gif)
 
 *The gif may take a few seconds to load
-
-## About
-
-ELSSA is a game developered on Unity3D using [Unity’s UI system](https://docs.unity3d.com/Manual/UISystem.html) and [Unity’s networking “high-level”](https://docs.unity3d.com/Manual/UNet.html) scripting API. This game is also using [Facebook API](https://developers.facebook.com) to login users and invites friend and [Facebook Score API](https://developers.facebook.com/docs/games/services/scores-achievements) to save score. At last using [Firebase Realtime Database](https://firebase.google.com/docs/database/) to sync kill/Dead values between players.
-
-## Important
-
-I reserve the righ to remove some classe and objects whose can't be open-sorce. 3D object, Facebook security passcode files and Firebase database structure. If a Fork was made of this repo you also will need download the Facebook Api and Firebase Realtime Database API and use your own data. 
-
